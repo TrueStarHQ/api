@@ -1,4 +1,4 @@
-openapi: 3.0.3
+openapi: 3.1.0
 info:
   title: TrueStar API
   description: API for fake review detection services
@@ -86,12 +86,9 @@ components:
         reviews:
           type: array
           minItems: 1
-          description: Array of review texts to analyze
+          description: Array of review data to analyze
           items:
-            type: string
-            minLength: 1
-            description: The review text
-            example: "This product is amazing! Best purchase ever!"
+            $ref: '#/components/schemas/ReviewData'
 
     CheckAmazonReviewsResponse:
       type: object
@@ -142,6 +139,34 @@ components:
           type: string
           description: Brief explanation of the analysis
           example: "Review appears fake due to generic praise without specific product details"
+
+    ReviewData:
+      type: object
+      required:
+        - rating
+        - text
+        - author
+        - verified
+      properties:
+        rating:
+          type: number
+          minimum: 1
+          maximum: 5
+          description: Review rating (1-5 stars)
+          example: 5
+        text:
+          type: string
+          minLength: 1
+          description: The review text content
+          example: "This product is amazing! Best purchase ever!"
+        author:
+          type: string
+          description: The reviewer's name or username
+          example: "John D."
+        verified:
+          type: boolean
+          description: Whether this is a verified purchase
+          example: true
 
     ReviewFlag:
       type: string
