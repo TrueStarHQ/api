@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { checkReview } from './services/review-checker/index.js';
@@ -11,7 +12,9 @@ import {
 import { validateEnvironment } from './config/environment.js';
 
 const fastify = Fastify({
-  logger: true,
+  logger: {
+    transport: { target: 'pino-pretty' },
+  },
 });
 
 // Register CORS plugin
@@ -120,9 +123,10 @@ const start = async () => {
     // Validate environment variables before starting
     const config = validateEnvironment();
     fastify.log.info('Environment validation passed');
+    fastify.log.info(`Configuration: PORT=${config.PORT}, HOST=${config.HOST}`);
 
-    const port = config.PORT ? parseInt(config.PORT) : 3001;
-    const host = config.HOST || '0.0.0.0';
+    const port = config.PORT;
+    const host = config.HOST;
 
     await fastify.listen({ port, host });
     fastify.log.info(`Server listening on ${host}:${port}`);
