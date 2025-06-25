@@ -19,31 +19,54 @@ const fastify = Fastify({
 
 // Register CORS plugin
 await fastify.register(cors, {
-  origin: ['http://localhost:3000', 'chrome-extension://*'],
+  origin: (origin, callback) => {
+    // Log the actual origin for debugging
+    fastify.log.info({ origin }, 'CORS origin check');
+
+    // Allow Amazon domains (where the extension runs) and no origin
+    const allowedOrigins = [
+      'https://amazon.com',
+      'https://www.amazon.com',
+      'https://www.amazon.ca',
+      'https://www.amazon.co.uk',
+      'https://www.amazon.de',
+      'https://www.amazon.fr',
+      'https://www.amazon.it',
+      'https://www.amazon.es',
+      'https://www.amazon.com.au',
+    ];
+
+    if (!origin || allowedOrigins.includes(origin)) {
+      fastify.log.info({ origin }, 'CORS origin allowed');
+      callback(null, true);
+    } else {
+      fastify.log.warn({ origin }, 'CORS origin rejected');
+      callback(new Error('Not allowed by CORS'), false);
+    }
+  },
+  credentials: false,
 });
 
 // Add request/response logging middleware
 fastify.addHook('onRequest', async (request, _reply) => {
-  const start = Date.now();
+  // Store start time for response logging
+  request.startTime = Date.now();
 
   // Log request
   request.log.info(
     {
       method: request.method,
       url: request.url,
+      origin: request.headers.origin,
       headers: request.headers,
       body: request.method === 'POST' ? request.body : undefined,
     },
     'Incoming request'
   );
-
-  // Store start time for response logging
-  (request as unknown as { startTime: number }).startTime = start;
 });
 
 fastify.addHook('onResponse', async (request, reply) => {
-  const duration =
-    Date.now() - (request as unknown as { startTime: number }).startTime;
+  const duration = Date.now() - request.startTime;
 
   // Log response
   request.log.info(
@@ -52,6 +75,7 @@ fastify.addHook('onResponse', async (request, reply) => {
       url: request.url,
       statusCode: reply.statusCode,
       duration: `${duration}ms`,
+      responseHeaders: reply.getHeaders(),
     },
     'Request completed'
   );
@@ -93,8 +117,13 @@ fastify.post<{
 
     const { reviews, productContext } = validationResult.data;
 
-    // Combine all reviews for analysis
-    const combinedReviewText = reviews.join('\n\n---\n\n');
+    // Convert ReviewData objects to formatted strings for analysis
+    const combinedReviewText = reviews
+      .map(
+        (review) =>
+          `Rating: ${review.rating}/5\nAuthor: ${review.author}\nVerified: ${review.verified ? 'Yes' : 'No'}\nReview: ${review.text}`
+      )
+      .join('\n\n---\n\n');
 
     const result = await checkReview(
       combinedReviewText,
@@ -107,7 +136,10 @@ fastify.post<{
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    fastify.log.error(error);
+    fastify.log.error(
+      { error, requestBody: request.body },
+      'Error processing review analysis request'
+    );
     return reply.status(500).send({
       error: 'SERVICE_ERROR',
       service: 'review-analyzer',
