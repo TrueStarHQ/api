@@ -1,5 +1,5 @@
 // Individual prompt definitions
-import { ProductContext } from '../../types/api.js';
+import { ProductContext } from '../../types/generated/index.js';
 
 export const SYSTEM_REVIEW_CHECKER_PROMPT = `
 You are an expert at detecting fake product reviews. Check the provided review and determine if it's likely to be fake or genuine.

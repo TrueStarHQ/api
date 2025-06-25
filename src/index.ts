@@ -4,12 +4,19 @@ import cors from '@fastify/cors';
 import { checkReview } from './services/review-checker/index.js';
 import {
   CheckAmazonReviewsRequest,
-  CheckAmazonReviewsRequestSchema,
   CheckAmazonReviewsResponse,
   ErrorResponse,
   HealthResponse,
-} from './types/api.js';
+} from './types/generated/index.js';
+import { checkAmazonReviewsBody } from './types/generated/zod.js';
 import { validateEnvironment } from './config/environment.js';
+
+// Extend Fastify request type to include startTime
+declare module 'fastify' {
+  interface FastifyRequest {
+    startTime: number;
+  }
+}
 
 const fastify = Fastify({
   logger: {
@@ -93,9 +100,7 @@ fastify.post<{
 }>('/check/amazon/reviews', async (request, reply) => {
   try {
     // Validate request body using Zod schema
-    const validationResult = CheckAmazonReviewsRequestSchema.safeParse(
-      request.body
-    );
+    const validationResult = checkAmazonReviewsBody.safeParse(request.body);
 
     if (!validationResult.success) {
       const validationErrors = validationResult.error.errors.map((err) => ({

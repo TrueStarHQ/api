@@ -4,13 +4,13 @@ import cors from '@fastify/cors';
 import { checkReview } from './services/review-checker/index.js';
 import {
   CheckAmazonReviewsRequest,
-  CheckAmazonReviewsRequestSchema,
   CheckAmazonReviewsResponse,
   ErrorResponse,
   ValidationErrorResponse,
   ServiceErrorResponse,
   HealthResponse,
-} from './types/api.js';
+} from './types/generated/index.js';
+import { checkAmazonReviewsBody } from './types/generated/zod.js';
 
 // Mock the review checker service
 vi.mock('./services/review-checker/index.js', () => ({
@@ -45,9 +45,7 @@ describe('API Endpoints Integration Tests', () => {
     }>('/check/amazon/reviews', async (request, reply) => {
       try {
         // Validate request body using Zod schema
-        const validationResult = CheckAmazonReviewsRequestSchema.safeParse(
-          request.body
-        );
+        const validationResult = checkAmazonReviewsBody.safeParse(request.body);
 
         if (!validationResult.success) {
           const validationErrors = validationResult.error.errors.map((err) => ({

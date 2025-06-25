@@ -48,3 +48,6 @@ coverage/
 
 # TypeScript cache
 *.tsbuildinfo
+
+# Generated API types (auto-generated from OpenAPI spec)
+src/types/generated/

@@ -4,7 +4,7 @@ import {
   ReviewChecker,
   ReviewCheckerSchema,
   ProductContext,
-} from '../../types/api.js';
+} from '../../types/generated/index.js';
 import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
 import { getConfig } from '../../config/environment.js';
 
