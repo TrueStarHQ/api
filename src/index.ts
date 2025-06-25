@@ -2,9 +2,9 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { checkReview } from './services/review-checker/index.js';
 import {
-  CheckReviewsRequest,
-  CheckReviewsRequestSchema,
-  CheckResponse,
+  CheckAmazonReviewsRequest,
+  CheckAmazonReviewsRequestSchema,
+  CheckAmazonReviewsResponse,
   ErrorResponse,
   HealthResponse,
 } from './types/api.js';
@@ -61,12 +61,14 @@ fastify.get('/health', async (): Promise<HealthResponse> => {
 
 // Amazon review checking endpoint
 fastify.post<{
-  Body: CheckReviewsRequest;
-  Reply: CheckResponse | ErrorResponse;
+  Body: CheckAmazonReviewsRequest;
+  Reply: CheckAmazonReviewsResponse | ErrorResponse;
 }>('/check/amazon/reviews', async (request, reply) => {
   try {
     // Validate request body using Zod schema
-    const validationResult = CheckReviewsRequestSchema.safeParse(request.body);
+    const validationResult = CheckAmazonReviewsRequestSchema.safeParse(
+      request.body
+    );
 
     if (!validationResult.success) {
       const validationErrors = validationResult.error.errors.map((err) => ({

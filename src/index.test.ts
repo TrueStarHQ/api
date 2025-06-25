@@ -3,9 +3,9 @@ import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import { checkReview } from './services/review-checker/index.js';
 import {
-  CheckReviewsRequest,
-  CheckReviewsRequestSchema,
-  CheckResponse,
+  CheckAmazonReviewsRequest,
+  CheckAmazonReviewsRequestSchema,
+  CheckAmazonReviewsResponse,
   ErrorResponse,
   ValidationErrorResponse,
   ServiceErrorResponse,
@@ -40,12 +40,12 @@ describe('API Endpoints Integration Tests', () => {
 
     // Amazon review checking endpoint
     fastify.post<{
-      Body: CheckReviewsRequest;
-      Reply: CheckResponse | ErrorResponse;
+      Body: CheckAmazonReviewsRequest;
+      Reply: CheckAmazonReviewsResponse | ErrorResponse;
     }>('/check/amazon/reviews', async (request, reply) => {
       try {
         // Validate request body using Zod schema
-        const validationResult = CheckReviewsRequestSchema.safeParse(
+        const validationResult = CheckAmazonReviewsRequestSchema.safeParse(
           request.body
         );
 
@@ -134,7 +134,7 @@ describe('API Endpoints Integration Tests', () => {
 
       mockCheckReview.mockResolvedValue(mockAnalysis);
 
-      const requestBody: CheckReviewsRequest = {
+      const requestBody: CheckAmazonReviewsRequest = {
         reviews: [
           'Best product ever! Amazing quality!',
           'Absolutely perfect in every way! Highly recommend!',
@@ -156,7 +156,7 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.statusCode).toBe(200);
 
-      const data = JSON.parse(response.payload) as CheckResponse;
+      const data = JSON.parse(response.payload) as CheckAmazonReviewsResponse;
       expect(data.result).toEqual(mockAnalysis);
       expect(data.timestamp).toBeDefined();
       expect(typeof data.timestamp).toBe('string');
@@ -216,7 +216,7 @@ describe('API Endpoints Integration Tests', () => {
 
       mockCheckReview.mockResolvedValue(mockAnalysis);
 
-      const requestBody: CheckReviewsRequest = {
+      const requestBody: CheckAmazonReviewsRequest = {
         reviews: ['Great product, works as expected. Good value for money.'],
       };
 
@@ -228,7 +228,7 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.statusCode).toBe(200);
 
-      const data = JSON.parse(response.payload) as CheckResponse;
+      const data = JSON.parse(response.payload) as CheckAmazonReviewsResponse;
       expect(data.result).toEqual(mockAnalysis);
       expect(mockCheckReview).toHaveBeenCalledWith(
         'Great product, works as expected. Good value for money.',
@@ -240,7 +240,7 @@ describe('API Endpoints Integration Tests', () => {
     it('should handle service errors gracefully', async () => {
       mockCheckReview.mockRejectedValue(new Error('Service unavailable'));
 
-      const requestBody: CheckReviewsRequest = {
+      const requestBody: CheckAmazonReviewsRequest = {
         reviews: ['Test review'],
       };
 

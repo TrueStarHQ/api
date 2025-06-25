@@ -8,8 +8,8 @@ export const ProductContextSchema = z.object({
   rating: z.number().min(1).max(5).optional(),
 });
 
-// Generic review checking request schema
-export const CheckReviewsRequestSchema = z.object({
+// Amazon review checking request schema
+export const CheckAmazonReviewsRequestSchema = z.object({
   reviews: z.array(z.string()).min(1, 'At least one review is required'),
   productContext: ProductContextSchema.optional(),
 });
@@ -44,7 +44,7 @@ export const ReviewCheckerSchema = z.object({
   summary: z.string(),
 });
 
-export const CheckResponseSchema = z.object({
+export const CheckAmazonReviewsResponseSchema = z.object({
   result: ReviewCheckerSchema,
   timestamp: z.string(),
 });
@@ -82,9 +82,13 @@ export type ErrorResponse =
 
 // Type exports
 export type ProductContext = z.infer<typeof ProductContextSchema>;
-export type CheckReviewsRequest = z.infer<typeof CheckReviewsRequestSchema>;
+export type CheckAmazonReviewsRequest = z.infer<
+  typeof CheckAmazonReviewsRequestSchema
+>;
 export type ReviewChecker = z.infer<typeof ReviewCheckerSchema>;
-export type CheckResponse = z.infer<typeof CheckResponseSchema>;
+export type CheckAmazonReviewsResponse = z.infer<
+  typeof CheckAmazonReviewsResponseSchema
+>;
 
 // Response types for routes
 export type HealthResponse = {

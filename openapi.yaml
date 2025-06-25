@@ -39,14 +39,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CheckReviewsRequest'
+              $ref: '#/components/schemas/CheckAmazonReviewsRequest'
       responses:
         '200':
           description: Review check completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckResponse'
+                $ref: '#/components/schemas/CheckAmazonReviewsResponse'
         '400':
           description: Bad request
           content:
@@ -77,7 +77,7 @@ components:
           format: date-time
           example: '2024-12-22T10:00:00.000Z'
 
-    CheckReviewsRequest:
+    CheckAmazonReviewsRequest:
       type: object
       required:
         - reviews
@@ -124,7 +124,7 @@ components:
           description: Product average rating
           example: 4.5
 
-    CheckResponse:
+    CheckAmazonReviewsResponse:
       type: object
       required:
         - result
