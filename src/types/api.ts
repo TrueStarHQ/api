@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+// Extend Fastify request type to include startTime
+declare module 'fastify' {
+  interface FastifyRequest {
+    startTime: number;
+  }
+}
+
 export const ProductContextSchema = z.object({
   title: z.string().optional(),
   brand: z.string().optional(),
@@ -8,9 +15,16 @@ export const ProductContextSchema = z.object({
   rating: z.number().min(1).max(5).optional(),
 });
 
+export const ReviewDataSchema = z.object({
+  rating: z.number(),
+  text: z.string(),
+  author: z.string(),
+  verified: z.boolean(),
+});
+
 // Amazon review checking request schema
 export const CheckAmazonReviewsRequestSchema = z.object({
-  reviews: z.array(z.string()).min(1, 'At least one review is required'),
+  reviews: z.array(ReviewDataSchema).min(1, 'At least one review is required'),
   productContext: ProductContextSchema.optional(),
 });
 
@@ -82,6 +96,7 @@ export type ErrorResponse =
 
 // Type exports
 export type ProductContext = z.infer<typeof ProductContextSchema>;
+export type ReviewData = z.infer<typeof ReviewDataSchema>;
 export type CheckAmazonReviewsRequest = z.infer<
   typeof CheckAmazonReviewsRequestSchema
 >;
