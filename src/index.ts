@@ -1,12 +1,9 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { analyzeReview } from './services/review-analyzer/index.js';
-import { amazonReviewFetcher } from './services/amazon/review-fetcher.js';
 import {
-  ScanAmazonProductRequest,
-  ScanAmazonProductRequestSchema,
-  ScanAmazonProductsRequest,
-  ScanAmazonProductsRequestSchema,
+  AnalyzeReviewsRequest,
+  AnalyzeReviewsRequestSchema,
   ScanResponse,
   ErrorResponse,
   HealthResponse,
@@ -62,14 +59,14 @@ fastify.get('/health', async (): Promise<HealthResponse> => {
   return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-// Amazon product scanning endpoint
+// Generic review analysis endpoint
 fastify.post<{
-  Body: ScanAmazonProductRequest;
+  Body: AnalyzeReviewsRequest;
   Reply: ScanResponse | ErrorResponse;
-}>('/scan/amazon/product', async (request, reply) => {
+}>('/analyze/reviews', async (request, reply) => {
   try {
     // Validate request body using Zod schema
-    const validationResult = ScanAmazonProductRequestSchema.safeParse(
+    const validationResult = AnalyzeReviewsRequestSchema.safeParse(
       request.body
     );
 
@@ -91,25 +88,14 @@ fastify.post<{
       });
     }
 
-    const { asin } = validationResult.data;
+    const { reviews, productContext } = validationResult.data;
 
-    // Fetch product and reviews from Amazon
-    const productData = await amazonReviewFetcher.fetchProductReviews(asin);
-    request.log.info(
-      { asin, reviewCount: productData.reviews.length },
-      'Fetched Amazon product and reviews'
-    );
-
-    // Analyze all reviews as a batch
-    const reviewTexts = productData.reviews.map(
-      (r) =>
-        `Rating: ${r.rating} stars\nTitle: ${r.title}\nReview: ${r.text}\nVerified: ${r.verified}`
-    );
-    const combinedReviewText = reviewTexts.join('\n\n---\n\n');
+    // Combine all reviews for analysis
+    const combinedReviewText = reviews.join('\n\n---\n\n');
 
     const result = await analyzeReview(
       combinedReviewText,
-      productData.product,
+      productContext,
       request.log
     );
 
@@ -117,84 +103,6 @@ fastify.post<{
       analysis: result,
       timestamp: new Date().toISOString(),
     };
-  } catch (error) {
-    fastify.log.error(error);
-    return reply.status(500).send({
-      error: 'SERVICE_ERROR',
-      service: 'review-analyzer',
-      details: 'Internal server error occurred while processing the request',
-      timestamp: new Date().toISOString(),
-    });
-  }
-});
-
-// Batch Amazon products scanning endpoint
-fastify.post<{
-  Body: ScanAmazonProductsRequest;
-  Reply: { results: ScanResponse[] } | ErrorResponse;
-}>('/scan/amazon/products', async (request, reply) => {
-  try {
-    // Validate request body using Zod schema
-    const validationResult = ScanAmazonProductsRequestSchema.safeParse(
-      request.body
-    );
-
-    if (!validationResult.success) {
-      const validationErrors = validationResult.error.errors.map((err) => ({
-        field: err.path.join('.'),
-        message: err.message,
-      }));
-
-      const details = validationErrors
-        .map((err) => `${err.field}: ${err.message}`)
-        .join(', ');
-
-      return reply.status(400).send({
-        error: 'VALIDATION_ERROR',
-        details,
-        validationErrors,
-        timestamp: new Date().toISOString(),
-      });
-    }
-
-    const { asins } = validationResult.data;
-
-    // Process all ASINs in parallel
-    const results = await Promise.all(
-      asins.map(async (asin) => {
-        try {
-          const productData =
-            await amazonReviewFetcher.fetchProductReviews(asin);
-          request.log.info(
-            { asin, reviewCount: productData.reviews.length },
-            'Fetched Amazon product and reviews'
-          );
-
-          // Analyze all reviews as a batch
-          const reviewTexts = productData.reviews.map(
-            (r) =>
-              `Rating: ${r.rating} stars\nTitle: ${r.title}\nReview: ${r.text}\nVerified: ${r.verified}`
-          );
-          const combinedReviewText = reviewTexts.join('\n\n---\n\n');
-
-          const result = await analyzeReview(
-            combinedReviewText,
-            productData.product,
-            request.log
-          );
-
-          return {
-            analysis: result,
-            timestamp: new Date().toISOString(),
-          };
-        } catch (error) {
-          request.log.error({ asin, error }, 'Failed to process ASIN');
-          throw error;
-        }
-      })
-    );
-
-    return { results };
   } catch (error) {
     fastify.log.error(error);
     return reply.status(500).send({

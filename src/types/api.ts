@@ -8,17 +8,10 @@ export const ProductContextSchema = z.object({
   rating: z.number().min(1).max(5).optional(),
 });
 
-// Amazon-specific request schema
-export const ScanAmazonProductRequestSchema = z.object({
-  asin: z.string().min(10).max(10, 'ASIN must be exactly 10 characters'),
-});
-
-// For batch processing multiple products
-export const ScanAmazonProductsRequestSchema = z.object({
-  asins: z
-    .array(z.string().min(10).max(10, 'ASIN must be exactly 10 characters'))
-    .min(1)
-    .max(10),
+// Generic review analysis request schema
+export const AnalyzeReviewsRequestSchema = z.object({
+  reviews: z.array(z.string()).min(1, 'At least one review is required'),
+  productContext: ProductContextSchema.optional(),
 });
 
 // Future scan schemas
@@ -89,12 +82,7 @@ export type ErrorResponse =
 
 // Type exports
 export type ProductContext = z.infer<typeof ProductContextSchema>;
-export type ScanAmazonProductRequest = z.infer<
-  typeof ScanAmazonProductRequestSchema
->;
-export type ScanAmazonProductsRequest = z.infer<
-  typeof ScanAmazonProductsRequestSchema
->;
+export type AnalyzeReviewsRequest = z.infer<typeof AnalyzeReviewsRequestSchema>;
 export type ReviewAnalyzer = z.infer<typeof ReviewAnalyzerSchema>;
 export type ScanResponse = z.infer<typeof ScanResponseSchema>;
 

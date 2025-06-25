@@ -2,10 +2,9 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import { analyzeReview } from './services/review-analyzer/index.js';
-import { amazonReviewFetcher } from './services/amazon/review-fetcher.js';
 import {
-  ScanAmazonProductRequest,
-  ScanAmazonProductRequestSchema,
+  AnalyzeReviewsRequest,
+  AnalyzeReviewsRequestSchema,
   ScanResponse,
   ErrorResponse,
   ValidationErrorResponse,
@@ -18,17 +17,7 @@ vi.mock('./services/review-analyzer/index.js', () => ({
   analyzeReview: vi.fn(),
 }));
 
-// Mock the Amazon review fetcher
-vi.mock('./services/amazon/review-fetcher.js', () => ({
-  amazonReviewFetcher: {
-    fetchProductReviews: vi.fn(),
-  },
-}));
-
 const mockAnalyzeReview = vi.mocked(analyzeReview);
-const mockAmazonReviewFetcher = vi.mocked(
-  amazonReviewFetcher.fetchProductReviews
-);
 
 describe('API Endpoints Integration Tests', () => {
   let fastify: FastifyInstance;
@@ -49,14 +38,14 @@ describe('API Endpoints Integration Tests', () => {
       return { status: 'ok', timestamp: new Date().toISOString() };
     });
 
-    // Amazon product scanning endpoint
+    // Generic review analysis endpoint
     fastify.post<{
-      Body: ScanAmazonProductRequest;
+      Body: AnalyzeReviewsRequest;
       Reply: ScanResponse | ErrorResponse;
-    }>('/scan/amazon/product', async (request, reply) => {
+    }>('/analyze/reviews', async (request, reply) => {
       try {
         // Validate request body using Zod schema
-        const validationResult = ScanAmazonProductRequestSchema.safeParse(
+        const validationResult = AnalyzeReviewsRequestSchema.safeParse(
           request.body
         );
 
@@ -78,21 +67,14 @@ describe('API Endpoints Integration Tests', () => {
           });
         }
 
-        const { asin } = validationResult.data;
+        const { reviews, productContext } = validationResult.data;
 
-        // Fetch product and reviews from Amazon
-        const productData = await amazonReviewFetcher.fetchProductReviews(asin);
-
-        // Analyze all reviews as a batch
-        const reviewTexts = productData.reviews.map(
-          (r) =>
-            `Rating: ${r.rating} stars\nTitle: ${r.title}\nReview: ${r.text}\nVerified: ${r.verified}`
-        );
-        const combinedReviewText = reviewTexts.join('\n\n---\n\n');
+        // Combine all reviews for analysis
+        const combinedReviewText = reviews.join('\n\n---\n\n');
 
         const result = await analyzeReview(
           combinedReviewText,
-          productData.product,
+          productContext,
           request.log
         );
 
@@ -140,7 +122,7 @@ describe('API Endpoints Integration Tests', () => {
     });
   });
 
-  describe('POST /scan/amazon/product', () => {
+  describe('POST /analyze/reviews', () => {
     it('should analyze product reviews successfully', async () => {
       const mockAnalysis = {
         isFake: true,
@@ -152,47 +134,23 @@ describe('API Endpoints Integration Tests', () => {
 
       mockAnalyzeReview.mockResolvedValue(mockAnalysis);
 
-      // Mock product and reviews from Amazon fetcher
-      const mockProductData = {
-        product: {
+      const requestBody: AnalyzeReviewsRequest = {
+        reviews: [
+          'Best product ever! Amazing quality!',
+          'Absolutely perfect in every way! Highly recommend!',
+        ],
+        productContext: {
           title: 'Test Product',
           brand: 'Test Brand',
           category: 'Electronics',
           price: 29.99,
           rating: 4.5,
         },
-        reviews: [
-          {
-            reviewId: '1',
-            rating: 5,
-            title: 'Amazing!',
-            text: 'Best product ever!',
-            author: 'User1',
-            date: '2024-01-01',
-            verified: false,
-            helpfulVotes: 0,
-          },
-          {
-            reviewId: '2',
-            rating: 5,
-            title: 'Perfect!',
-            text: 'Absolutely perfect in every way!',
-            author: 'User2',
-            date: '2024-01-01',
-            verified: false,
-            helpfulVotes: 0,
-          },
-        ],
-      };
-      mockAmazonReviewFetcher.mockResolvedValue(mockProductData);
-
-      const requestBody: ScanAmazonProductRequest = {
-        asin: 'B08N5WRWNW',
       };
 
       const response = await fastify.inject({
         method: 'POST',
-        url: '/scan/amazon/product',
+        url: '/analyze/reviews',
         payload: requestBody,
       });
 
@@ -203,19 +161,18 @@ describe('API Endpoints Integration Tests', () => {
       expect(data.timestamp).toBeDefined();
       expect(typeof data.timestamp).toBe('string');
 
-      // Verify the services were called with correct parameters
-      expect(mockAmazonReviewFetcher).toHaveBeenCalledWith(requestBody.asin);
+      // Verify the service was called with correct parameters
       expect(mockAnalyzeReview).toHaveBeenCalledWith(
-        expect.stringContaining('Rating: 5 stars'),
-        mockProductData.product,
+        expect.stringContaining('Best product ever'),
+        requestBody.productContext,
         expect.any(Object) // Fastify logger
       );
     });
 
-    it('should return 400 when ASIN is missing', async () => {
+    it('should return 400 when reviews are missing', async () => {
       const response = await fastify.inject({
         method: 'POST',
-        url: '/scan/amazon/product',
+        url: '/analyze/reviews',
         payload: {},
       });
 
@@ -223,18 +180,18 @@ describe('API Endpoints Integration Tests', () => {
 
       const data = JSON.parse(response.payload) as ValidationErrorResponse;
       expect(data.error).toBe('VALIDATION_ERROR');
-      expect(data.details).toContain('asin');
+      expect(data.details).toContain('reviews');
       expect(data.validationErrors).toBeDefined();
       expect(data.timestamp).toBeDefined();
       expect(mockAnalyzeReview).not.toHaveBeenCalled();
     });
 
-    it('should return 400 when ASIN is too short', async () => {
+    it('should return 400 when reviews array is empty', async () => {
       const response = await fastify.inject({
         method: 'POST',
-        url: '/scan/amazon/product',
+        url: '/analyze/reviews',
         payload: {
-          asin: 'SHORT',
+          reviews: [],
         },
       });
 
@@ -242,66 +199,54 @@ describe('API Endpoints Integration Tests', () => {
 
       const data = JSON.parse(response.payload) as ValidationErrorResponse;
       expect(data.error).toBe('VALIDATION_ERROR');
-      expect(data.details).toContain(
-        'String must contain at least 10 character(s)'
+      expect(data.details).toContain('At least one review is required');
+      expect(data.validationErrors).toBeDefined();
+      expect(data.timestamp).toBeDefined();
+      expect(mockAnalyzeReview).not.toHaveBeenCalled();
+    });
+
+    it('should work without productContext', async () => {
+      const mockAnalysis = {
+        isFake: false,
+        confidence: 0.3,
+        reasons: ['Review appears genuine'],
+        flags: [],
+        summary: 'Review seems authentic',
+      };
+
+      mockAnalyzeReview.mockResolvedValue(mockAnalysis);
+
+      const requestBody: AnalyzeReviewsRequest = {
+        reviews: ['Great product, works as expected. Good value for money.'],
+      };
+
+      const response = await fastify.inject({
+        method: 'POST',
+        url: '/analyze/reviews',
+        payload: requestBody,
+      });
+
+      expect(response.statusCode).toBe(200);
+
+      const data = JSON.parse(response.payload) as ScanResponse;
+      expect(data.analysis).toEqual(mockAnalysis);
+      expect(mockAnalyzeReview).toHaveBeenCalledWith(
+        'Great product, works as expected. Good value for money.',
+        undefined,
+        expect.any(Object)
       );
-      expect(data.validationErrors).toBeDefined();
-      expect(data.timestamp).toBeDefined();
-      expect(mockAnalyzeReview).not.toHaveBeenCalled();
-    });
-
-    it('should return 400 when ASIN is too long', async () => {
-      const response = await fastify.inject({
-        method: 'POST',
-        url: '/scan/amazon/product',
-        payload: {
-          asin: 'B08N5WRWNWTOOLONG', // Invalid - should be exactly 10 characters
-        },
-      });
-
-      expect(response.statusCode).toBe(400);
-
-      const data = JSON.parse(response.payload) as ValidationErrorResponse;
-      expect(data.error).toBe('VALIDATION_ERROR');
-      expect(data.details).toContain('ASIN must be exactly 10 characters');
-      expect(data.validationErrors).toBeDefined();
-      expect(data.timestamp).toBeDefined();
-      expect(mockAnalyzeReview).not.toHaveBeenCalled();
     });
 
     it('should handle service errors gracefully', async () => {
       mockAnalyzeReview.mockRejectedValue(new Error('Service unavailable'));
 
-      const mockProductData = {
-        product: {
-          title: 'Test',
-          brand: 'Test',
-          category: 'Test',
-          price: 10,
-          rating: 4,
-        },
-        reviews: [
-          {
-            reviewId: '1',
-            rating: 5,
-            title: 'Test',
-            text: 'Test',
-            author: 'Test',
-            date: '2024-01-01',
-            verified: true,
-            helpfulVotes: 0,
-          },
-        ],
-      };
-      mockAmazonReviewFetcher.mockResolvedValue(mockProductData);
-
-      const requestBody: ScanAmazonProductRequest = {
-        asin: 'B08N5WRWNW',
+      const requestBody: AnalyzeReviewsRequest = {
+        reviews: ['Test review'],
       };
 
       const response = await fastify.inject({
         method: 'POST',
-        url: '/scan/amazon/product',
+        url: '/analyze/reviews',
         payload: requestBody,
       });
 
@@ -313,36 +258,10 @@ describe('API Endpoints Integration Tests', () => {
       expect(data.timestamp).toBeDefined();
 
       expect(mockAnalyzeReview).toHaveBeenCalledWith(
-        expect.any(String), // combined review text
-        expect.any(Object), // productContext
+        'Test review',
+        undefined,
         expect.any(Object) // logger
       );
-    });
-
-    it('should handle review fetcher errors gracefully', async () => {
-      mockAmazonReviewFetcher.mockRejectedValue(
-        new Error('Failed to fetch reviews')
-      );
-
-      const requestBody: ScanAmazonProductRequest = {
-        asin: 'B08N5WRWNW',
-      };
-
-      const response = await fastify.inject({
-        method: 'POST',
-        url: '/scan/amazon/product',
-        payload: requestBody,
-      });
-
-      expect(response.statusCode).toBe(500);
-
-      const data = JSON.parse(response.payload) as ServiceErrorResponse;
-      expect(data.error).toBe('SERVICE_ERROR');
-      expect(data.service).toBe('review-analyzer');
-      expect(data.timestamp).toBeDefined();
-
-      expect(mockAmazonReviewFetcher).toHaveBeenCalledWith(requestBody.asin);
-      expect(mockAnalyzeReview).not.toHaveBeenCalled();
     });
   });
 
@@ -366,7 +285,7 @@ describe('API Endpoints Integration Tests', () => {
     it('should handle OPTIONS requests from chrome extensions', async () => {
       const response = await fastify.inject({
         method: 'OPTIONS',
-        url: '/scan/amazon/product',
+        url: '/analyze/reviews',
         headers: {
           origin: 'chrome-extension://abcdefghijklmnop',
           'access-control-request-method': 'POST',

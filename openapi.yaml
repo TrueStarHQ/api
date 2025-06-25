@@ -4,13 +4,14 @@ info:
   description: API for fake review detection services
   version: 1.0.0
   contact:
-    name: TrueStar Support
+    name: TrueStar Team
+    email: hello@truestar.pro
 
 servers:
-  - url: http://localhost:3001
-    description: Local development
   - url: https://api.truestar.pro
     description: Production
+  - url: http://localhost:3001
+    description: Local development
 
 paths:
   /health:
@@ -27,41 +28,27 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
 
-  /check/amazon/reviews:
+  /analyze/reviews:
     post:
-      summary: Check Amazon reviews for authenticity
-      operationId: checkAmazonReviews
+      summary: Analyze reviews for authenticity
+      operationId: analyzeReviews
       tags:
         - Review Analyzer
-      security:
-        - apiKey: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CheckReviewsRequest'
+              $ref: '#/components/schemas/AnalyzeReviewsRequest'
       responses:
         '200':
           description: Review analysis completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckReviewsResponse'
+                $ref: '#/components/schemas/ScanResponse'
         '400':
           description: Bad request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
-          description: Rate limit exceeded
           content:
             application/json:
               schema:
@@ -74,13 +61,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
 components:
-  securitySchemes:
-    apiKey:
-      type: apiKey
-      in: header
-      name: X-API-Key
-      description: API key for authentication
-
   schemas:
     HealthResponse:
       type: object
@@ -97,7 +77,7 @@ components:
           format: date-time
           example: '2024-12-22T10:00:00.000Z'
 
-    CheckReviewsRequest:
+    AnalyzeReviewsRequest:
       type: object
       required:
         - reviews
@@ -105,33 +85,14 @@ components:
         reviews:
           type: array
           minItems: 1
-          maxItems: 100
-          description: Array of reviews to check
+          description: Array of review texts to analyze
           items:
-            type: object
-            required:
-              - text
-            properties:
-              text:
-                type: string
-                minLength: 1
-                description: The review text
-                example: "This product is amazing! Best purchase ever!"
-              reviewerId:
-                type: string
-                description: Anonymized reviewer identifier
-              rating:
-                type: integer
-                minimum: 1
-                maximum: 5
-                description: Star rating given by reviewer
-              verifiedPurchase:
-                type: boolean
-                description: Whether the reviewer has a verified purchase
-              reviewDate:
-                type: string
-                format: date
-                description: Date when the review was posted
+            type: string
+            minLength: 1
+            description: The review text
+            example: "This product is amazing! Best purchase ever!"
+        productContext:
+          $ref: '#/components/schemas/ProductContext'
 
     ProductContext:
       type: object
@@ -163,35 +124,14 @@ components:
           description: Product average rating
           example: 4.5
 
-    CheckReviewsResponse:
+    ScanResponse:
       type: object
       required:
-        - results
-        - summary
+        - analysis
         - timestamp
       properties:
-        results:
-          type: array
-          description: Analysis results for each review
-          items:
-            $ref: '#/components/schemas/ReviewAnalyzer'
-        summary:
-          type: object
-          description: Overall summary statistics
-          properties:
-            totalReviews:
-              type: integer
-              description: Total number of reviews analyzed
-            fakeCount:
-              type: integer
-              description: Number of reviews identified as fake
-            realCount:
-              type: integer
-              description: Number of reviews identified as real
-            averageConfidence:
-              type: number
-              format: float
-              description: Average confidence score across all analyses
+        analysis:
+          $ref: '#/components/schemas/ReviewAnalyzer'
         timestamp:
           type: string
           format: date-time

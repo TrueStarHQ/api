@@ -44,13 +44,16 @@ The server will start on `http://localhost:3001` by default.
 GET /health
 ```
 
-### Analyze Review
+### Analyze Reviews
 ```
-POST /analyze
+POST /analyze/reviews
 Content-Type: application/json
 
 {
-  "reviewText": "This product is amazing! Best purchase ever!",
+  "reviews": [
+    "This product is amazing! Best purchase ever!",
+    "Absolutely perfect in every way! Highly recommend!"
+  ],
   "productContext": {
     "title": "Product Name",
     "brand": "Brand Name",
