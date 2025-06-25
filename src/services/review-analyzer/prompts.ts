@@ -1,7 +1,7 @@
 // Individual prompt definitions
 import { ProductContext } from '../../types/api.js';
 
-export const SYSTEM_REVIEW_ANALYSIS_PROMPT = `
+export const SYSTEM_REVIEW_ANALYZER_PROMPT = `
 You are an expert at detecting fake product reviews. Analyze the provided review and determine if it's likely to be fake or genuine.
 
 Consider these factors:

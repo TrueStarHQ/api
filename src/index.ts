@@ -1,6 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { analyzeReview } from './services/review-analysis/index.js';
+import { analyzeReview } from './services/review-analyzer/index.js';
 import { amazonReviewFetcher } from './services/amazon/review-fetcher.js';
 import {
   ScanAmazonProductRequest,
@@ -121,7 +121,7 @@ fastify.post<{
     fastify.log.error(error);
     return reply.status(500).send({
       error: 'SERVICE_ERROR',
-      service: 'review-analysis',
+      service: 'review-analyzer',
       details: 'Internal server error occurred while processing the request',
       timestamp: new Date().toISOString(),
     });
@@ -199,7 +199,7 @@ fastify.post<{
     fastify.log.error(error);
     return reply.status(500).send({
       error: 'SERVICE_ERROR',
-      service: 'review-analysis',
+      service: 'review-analyzer',
       details: 'Internal server error occurred while processing the request',
       timestamp: new Date().toISOString(),
     });

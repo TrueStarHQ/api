@@ -1,11 +1,11 @@
 import OpenAI from 'openai';
 import { FastifyBaseLogger } from 'fastify';
 import {
-  ReviewAnalysis,
-  ReviewAnalysisSchema,
+  ReviewAnalyzer,
+  ReviewAnalyzerSchema,
   ProductContext,
 } from '../../types/api.js';
-import { SYSTEM_REVIEW_ANALYSIS_PROMPT, userReviewPrompt } from './prompts.js';
+import { SYSTEM_REVIEW_ANALYZER_PROMPT, userReviewPrompt } from './prompts.js';
 import { getConfig } from '../../config/environment.js';
 
 let openai: OpenAI;
@@ -24,8 +24,8 @@ export async function analyzeReview(
   reviewText: string,
   productContext?: ProductContext,
   logger?: FastifyBaseLogger
-): Promise<ReviewAnalysis> {
-  const systemPrompt = SYSTEM_REVIEW_ANALYSIS_PROMPT;
+): Promise<ReviewAnalyzer> {
+  const systemPrompt = SYSTEM_REVIEW_ANALYZER_PROMPT;
   const userPrompt = userReviewPrompt(reviewText, productContext);
 
   try {
@@ -48,7 +48,7 @@ export async function analyzeReview(
     }
 
     const rawAnalysis = JSON.parse(response);
-    const analysis = ReviewAnalysisSchema.parse(rawAnalysis);
+    const analysis = ReviewAnalyzerSchema.parse(rawAnalysis);
 
     return analysis;
   } catch (error) {

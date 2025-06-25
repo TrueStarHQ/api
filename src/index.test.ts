@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import { analyzeReview } from './services/review-analysis/index.js';
+import { analyzeReview } from './services/review-analyzer/index.js';
 import { amazonReviewFetcher } from './services/amazon/review-fetcher.js';
 import {
   ScanAmazonProductRequest,
@@ -13,8 +13,8 @@ import {
   HealthResponse,
 } from './types/api.js';
 
-// Mock the review analysis service
-vi.mock('./services/review-analysis/index.js', () => ({
+// Mock the review analyzer service
+vi.mock('./services/review-analyzer/index.js', () => ({
   analyzeReview: vi.fn(),
 }));
 
@@ -104,7 +104,7 @@ describe('API Endpoints Integration Tests', () => {
         fastify.log.error(error);
         return reply.status(500).send({
           error: 'SERVICE_ERROR',
-          service: 'review-analysis',
+          service: 'review-analyzer',
           details:
             'Internal server error occurred while processing the request',
           timestamp: new Date().toISOString(),
@@ -309,7 +309,7 @@ describe('API Endpoints Integration Tests', () => {
 
       const data = JSON.parse(response.payload) as ServiceErrorResponse;
       expect(data.error).toBe('SERVICE_ERROR');
-      expect(data.service).toBe('review-analysis');
+      expect(data.service).toBe('review-analyzer');
       expect(data.timestamp).toBeDefined();
 
       expect(mockAnalyzeReview).toHaveBeenCalledWith(
@@ -338,7 +338,7 @@ describe('API Endpoints Integration Tests', () => {
 
       const data = JSON.parse(response.payload) as ServiceErrorResponse;
       expect(data.error).toBe('SERVICE_ERROR');
-      expect(data.service).toBe('review-analysis');
+      expect(data.service).toBe('review-analyzer');
       expect(data.timestamp).toBeDefined();
 
       expect(mockAmazonReviewFetcher).toHaveBeenCalledWith(requestBody.asin);

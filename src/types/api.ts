@@ -32,7 +32,7 @@ export const ScanAmazonProductsRequestSchema = z.object({
 // });
 
 // Response schemas
-export const ReviewAnalysisSchema = z.object({
+export const ReviewAnalyzerSchema = z.object({
   isFake: z.boolean(),
   confidence: z.number().min(0).max(1),
   reasons: z.array(z.string()),
@@ -52,7 +52,7 @@ export const ReviewAnalysisSchema = z.object({
 });
 
 export const ScanResponseSchema = z.object({
-  analysis: ReviewAnalysisSchema,
+  analysis: ReviewAnalyzerSchema,
   timestamp: z.string(),
 });
 
@@ -95,7 +95,7 @@ export type ScanAmazonProductRequest = z.infer<
 export type ScanAmazonProductsRequest = z.infer<
   typeof ScanAmazonProductsRequestSchema
 >;
-export type ReviewAnalysis = z.infer<typeof ReviewAnalysisSchema>;
+export type ReviewAnalyzer = z.infer<typeof ReviewAnalyzerSchema>;
 export type ScanResponse = z.infer<typeof ScanResponseSchema>;
 
 // Response types for routes

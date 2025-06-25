@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { analyzeReview } from './review-analysis.js';
+import { analyzeReview } from './review-analyzer.js';
 
 vi.mock('openai', () => ({
   default: vi.fn().mockImplementation(() => ({
@@ -11,7 +11,7 @@ vi.mock('openai', () => ({
   })),
 }));
 
-describe('Review Analysis Service', () => {
+describe('Review Analyzer Service', () => {
   it('should return analysis for a review', async () => {
     const mockResponse = {
       isFake: true,

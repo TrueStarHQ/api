@@ -32,7 +32,7 @@ paths:
       summary: Check Amazon reviews for authenticity
       operationId: checkAmazonReviews
       tags:
-        - Review Analysis
+        - Review Analyzer
       security:
         - apiKey: []
       requestBody:
@@ -174,7 +174,7 @@ components:
           type: array
           description: Analysis results for each review
           items:
-            $ref: '#/components/schemas/ReviewAnalysis'
+            $ref: '#/components/schemas/ReviewAnalyzer'
         summary:
           type: object
           description: Overall summary statistics
@@ -197,7 +197,7 @@ components:
           format: date-time
           example: '2024-12-22T10:00:00.000Z'
 
-    ReviewAnalysis:
+    ReviewAnalyzer:
       type: object
       required:
         - isFake
@@ -264,5 +264,5 @@ components:
 tags:
   - name: System
     description: System health and status endpoints
-  - name: Review Analysis
+  - name: Review Analyzer
     description: Review analysis endpoints

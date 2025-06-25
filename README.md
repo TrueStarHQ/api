@@ -1,4 +1,4 @@
-# Review Analysis
+# Review Analyzer
 
 A TypeScript service for analyzing product reviews to detect fake reviews using OpenAI's GPT models.
 
