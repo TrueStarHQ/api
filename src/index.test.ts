@@ -38,11 +38,11 @@ describe('API Endpoints Integration Tests', () => {
       return { status: 'ok', timestamp: new Date().toISOString() };
     });
 
-    // Generic review analysis endpoint
+    // Amazon review checking endpoint
     fastify.post<{
       Body: AnalyzeReviewsRequest;
       Reply: ScanResponse | ErrorResponse;
-    }>('/analyze/reviews', async (request, reply) => {
+    }>('/check/amazon/reviews', async (request, reply) => {
       try {
         // Validate request body using Zod schema
         const validationResult = AnalyzeReviewsRequestSchema.safeParse(
@@ -122,7 +122,7 @@ describe('API Endpoints Integration Tests', () => {
     });
   });
 
-  describe('POST /analyze/reviews', () => {
+  describe('POST /check/amazon/reviews', () => {
     it('should analyze product reviews successfully', async () => {
       const mockAnalysis = {
         isFake: true,
@@ -150,7 +150,7 @@ describe('API Endpoints Integration Tests', () => {
 
       const response = await fastify.inject({
         method: 'POST',
-        url: '/analyze/reviews',
+        url: '/check/amazon/reviews',
         payload: requestBody,
       });
 
@@ -172,7 +172,7 @@ describe('API Endpoints Integration Tests', () => {
     it('should return 400 when reviews are missing', async () => {
       const response = await fastify.inject({
         method: 'POST',
-        url: '/analyze/reviews',
+        url: '/check/amazon/reviews',
         payload: {},
       });
 
@@ -189,7 +189,7 @@ describe('API Endpoints Integration Tests', () => {
     it('should return 400 when reviews array is empty', async () => {
       const response = await fastify.inject({
         method: 'POST',
-        url: '/analyze/reviews',
+        url: '/check/amazon/reviews',
         payload: {
           reviews: [],
         },
@@ -222,7 +222,7 @@ describe('API Endpoints Integration Tests', () => {
 
       const response = await fastify.inject({
         method: 'POST',
-        url: '/analyze/reviews',
+        url: '/check/amazon/reviews',
         payload: requestBody,
       });
 
@@ -246,7 +246,7 @@ describe('API Endpoints Integration Tests', () => {
 
       const response = await fastify.inject({
         method: 'POST',
-        url: '/analyze/reviews',
+        url: '/check/amazon/reviews',
         payload: requestBody,
       });
 
@@ -285,7 +285,7 @@ describe('API Endpoints Integration Tests', () => {
     it('should handle OPTIONS requests from chrome extensions', async () => {
       const response = await fastify.inject({
         method: 'OPTIONS',
-        url: '/analyze/reviews',
+        url: '/check/amazon/reviews',
         headers: {
           origin: 'chrome-extension://abcdefghijklmnop',
           'access-control-request-method': 'POST',

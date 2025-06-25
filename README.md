@@ -44,9 +44,9 @@ The server will start on `http://localhost:3001` by default.
 GET /health
 ```
 
-### Analyze Reviews
+### Check Amazon Reviews
 ```
-POST /analyze/reviews
+POST /check/amazon/reviews
 Content-Type: application/json
 
 {

@@ -59,11 +59,11 @@ fastify.get('/health', async (): Promise<HealthResponse> => {
   return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-// Generic review analysis endpoint
+// Amazon review checking endpoint
 fastify.post<{
   Body: AnalyzeReviewsRequest;
   Reply: ScanResponse | ErrorResponse;
-}>('/analyze/reviews', async (request, reply) => {
+}>('/check/amazon/reviews', async (request, reply) => {
   try {
     // Validate request body using Zod schema
     const validationResult = AnalyzeReviewsRequestSchema.safeParse(

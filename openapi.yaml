@@ -28,10 +28,10 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
 
-  /analyze/reviews:
+  /check/amazon/reviews:
     post:
-      summary: Analyze reviews for authenticity
-      operationId: analyzeReviews
+      summary: Check Amazon reviews for authenticity
+      operationId: checkAmazonReviews
       tags:
         - Review Analyzer
       requestBody:
