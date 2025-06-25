@@ -60,7 +60,7 @@ fastify.addHook('onRequest', async (request, _reply) => {
   request.startTime = Date.now();
 
   // Log request
-  request.log.info(
+  request.log.debug(
     {
       method: request.method,
       url: request.url,
@@ -76,7 +76,7 @@ fastify.addHook('onResponse', async (request, reply) => {
   const duration = Date.now() - request.startTime;
 
   // Log response
-  request.log.info(
+  request.log.debug(
     {
       method: request.method,
       url: request.url,
@@ -115,26 +115,19 @@ fastify.post<{
       return reply.status(400).send({
         error: 'VALIDATION_ERROR',
         details,
-        validationErrors,
         timestamp: new Date().toISOString(),
       });
     }
 
-    const { reviews, productContext } = validationResult.data;
-
     // Convert ReviewData objects to formatted strings for analysis
-    const combinedReviewText = reviews
+    const combinedReviewText = validationResult.data.reviews
       .map(
         (review) =>
           `Rating: ${review.rating}/5\nAuthor: ${review.author}\nVerified: ${review.verified ? 'Yes' : 'No'}\nReview: ${review.text}`
       )
       .join('\n\n---\n\n');
 
-    const result = await checkReview(
-      combinedReviewText,
-      productContext,
-      request.log
-    );
+    const result = await checkReview(combinedReviewText, request.log);
 
     return {
       result: result,
@@ -145,19 +138,17 @@ fastify.post<{
       { error, requestBody: request.body },
       'Error processing review analysis request'
     );
+
     return reply.status(500).send({
       error: 'SERVICE_ERROR',
-      service: 'review-analyzer',
       details: 'Internal server error occurred while processing the request',
       timestamp: new Date().toISOString(),
     });
   }
 });
 
-// Start server
-const start = async () => {
+const startServer = async () => {
   try {
-    // Validate environment variables before starting
     const config = validateEnvironment();
     fastify.log.info('Environment validation passed');
     fastify.log.info(`Configuration: PORT=${config.PORT}, HOST=${config.HOST}`);
@@ -173,4 +164,4 @@ const start = async () => {
   }
 };
 
-start();
+startServer();
