@@ -1,5 +1,5 @@
 {
-  "name": "@truestar/review-analyzer",
+  "name": "@truestar/review-checker",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",

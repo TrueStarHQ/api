@@ -8,8 +8,8 @@ export const ProductContextSchema = z.object({
   rating: z.number().min(1).max(5).optional(),
 });
 
-// Generic review analysis request schema
-export const AnalyzeReviewsRequestSchema = z.object({
+// Generic review checking request schema
+export const CheckReviewsRequestSchema = z.object({
   reviews: z.array(z.string()).min(1, 'At least one review is required'),
   productContext: ProductContextSchema.optional(),
 });
@@ -25,7 +25,7 @@ export const AnalyzeReviewsRequestSchema = z.object({
 // });
 
 // Response schemas
-export const ReviewAnalyzerSchema = z.object({
+export const ReviewCheckerSchema = z.object({
   isFake: z.boolean(),
   confidence: z.number().min(0).max(1),
   reasons: z.array(z.string()),
@@ -44,8 +44,8 @@ export const ReviewAnalyzerSchema = z.object({
   summary: z.string(),
 });
 
-export const ScanResponseSchema = z.object({
-  analysis: ReviewAnalyzerSchema,
+export const CheckResponseSchema = z.object({
+  result: ReviewCheckerSchema,
   timestamp: z.string(),
 });
 
@@ -82,9 +82,9 @@ export type ErrorResponse =
 
 // Type exports
 export type ProductContext = z.infer<typeof ProductContextSchema>;
-export type AnalyzeReviewsRequest = z.infer<typeof AnalyzeReviewsRequestSchema>;
-export type ReviewAnalyzer = z.infer<typeof ReviewAnalyzerSchema>;
-export type ScanResponse = z.infer<typeof ScanResponseSchema>;
+export type CheckReviewsRequest = z.infer<typeof CheckReviewsRequestSchema>;
+export type ReviewChecker = z.infer<typeof ReviewCheckerSchema>;
+export type CheckResponse = z.infer<typeof CheckResponseSchema>;
 
 // Response types for routes
 export type HealthResponse = {

@@ -1,11 +1,11 @@
-# Review Analyzer
+# Review Checker
 
-A TypeScript service for analyzing product reviews to detect fake reviews using OpenAI's GPT models.
+A TypeScript service for checking product reviews to detect fake reviews using OpenAI's GPT models.
 
 ## Features
 
 - Fastify-based REST API
-- OpenAI integration for review analysis
+- OpenAI integration for review checking
 - TypeScript with strict type checking
 - Zod schema validation
 - CORS support for browser extensions
@@ -67,7 +67,7 @@ Content-Type: application/json
 Response:
 ```json
 {
-  "analysis": {
+  "result": {
     "isFake": true,
     "confidence": 0.8,
     "reasons": ["Excessive positivity without specific details"],

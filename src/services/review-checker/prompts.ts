@@ -1,8 +1,8 @@
 // Individual prompt definitions
 import { ProductContext } from '../../types/api.js';
 
-export const SYSTEM_REVIEW_ANALYZER_PROMPT = `
-You are an expert at detecting fake product reviews. Analyze the provided review and determine if it's likely to be fake or genuine.
+export const SYSTEM_REVIEW_CHECKER_PROMPT = `
+You are an expert at detecting fake product reviews. Check the provided review and determine if it's likely to be fake or genuine.
 
 Consider these factors:
 - Generic or overly vague language
@@ -18,7 +18,7 @@ Respond with a JSON object containing:
 - confidence: number (0-1, how confident you are)
 - reasons: array of specific reasons for your assessment
 - flags: array of detected red flags from the predefined list
-- summary: brief explanation of your analysis
+- summary: brief explanation of your check
 
 Be thorough but concise. Focus on specific indicators rather than general impressions.`;
 
@@ -26,7 +26,7 @@ export function userReviewPrompt(
   reviewText: string,
   productContext?: ProductContext
 ): string {
-  return `Review to analyze: "${reviewText}"
+  return `Review to check: "${reviewText}"
 
 ${
   productContext
@@ -39,5 +39,5 @@ ${
     : ''
 }
 
-Analyze this review for authenticity.`;
+Check this review for authenticity.`;
 }

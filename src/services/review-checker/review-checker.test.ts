@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { analyzeReview } from './review-analyzer.js';
+import { checkReview } from './review-checker.js';
 
 vi.mock('openai', () => ({
   default: vi.fn().mockImplementation(() => ({
@@ -11,8 +11,8 @@ vi.mock('openai', () => ({
   })),
 }));
 
-describe('Review Analyzer Service', () => {
-  it('should return analysis for a review', async () => {
+describe('Review Checker Service', () => {
+  it('should return check result for a review', async () => {
     const mockResponse = {
       isFake: true,
       confidence: 0.85,
@@ -35,18 +35,18 @@ describe('Review Analyzer Service', () => {
     const mockOpenAI = new OpenAI({ apiKey: 'test-key' });
     mockOpenAI.chat.completions.create = mockCreate;
 
-    const analysis = await analyzeReview(
+    const result = await checkReview(
       'This product is amazing!',
       undefined,
       undefined
     );
 
-    expect(analysis).toBeDefined();
-    expect(typeof analysis.isFake).toBe('boolean');
-    expect(typeof analysis.confidence).toBe('number');
-    expect(Array.isArray(analysis.reasons)).toBe(true);
-    expect(Array.isArray(analysis.flags)).toBe(true);
-    expect(typeof analysis.summary).toBe('string');
+    expect(result).toBeDefined();
+    expect(typeof result.isFake).toBe('boolean');
+    expect(typeof result.confidence).toBe('number');
+    expect(Array.isArray(result.reasons)).toBe(true);
+    expect(Array.isArray(result.flags)).toBe(true);
+    expect(typeof result.summary).toBe('string');
   });
 
   it('should handle OpenAI API errors gracefully', async () => {
@@ -56,9 +56,9 @@ describe('Review Analyzer Service', () => {
     const mockOpenAI = new OpenAI({ apiKey: 'test-key' });
     mockOpenAI.chat.completions.create = mockCreate;
 
-    const analysis = await analyzeReview('Test review', undefined, undefined);
+    const result = await checkReview('Test review', undefined, undefined);
 
-    expect(analysis).toEqual({
+    expect(result).toEqual({
       isFake: false,
       confidence: 0,
       reasons: ['Analysis failed - unable to determine authenticity'],

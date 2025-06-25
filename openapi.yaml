@@ -39,14 +39,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AnalyzeReviewsRequest'
+              $ref: '#/components/schemas/CheckReviewsRequest'
       responses:
         '200':
-          description: Review analysis completed
+          description: Review check completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScanResponse'
+                $ref: '#/components/schemas/CheckResponse'
         '400':
           description: Bad request
           content:
@@ -77,7 +77,7 @@ components:
           format: date-time
           example: '2024-12-22T10:00:00.000Z'
 
-    AnalyzeReviewsRequest:
+    CheckReviewsRequest:
       type: object
       required:
         - reviews
@@ -124,20 +124,20 @@ components:
           description: Product average rating
           example: 4.5
 
-    ScanResponse:
+    CheckResponse:
       type: object
       required:
-        - analysis
+        - result
         - timestamp
       properties:
-        analysis:
-          $ref: '#/components/schemas/ReviewAnalyzer'
+        result:
+          $ref: '#/components/schemas/ReviewChecker'
         timestamp:
           type: string
           format: date-time
           example: '2024-12-22T10:00:00.000Z'
 
-    ReviewAnalyzer:
+    ReviewChecker:
       type: object
       required:
         - isFake

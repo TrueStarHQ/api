@@ -1,10 +1,10 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { analyzeReview } from './services/review-analyzer/index.js';
+import { checkReview } from './services/review-checker/index.js';
 import {
-  AnalyzeReviewsRequest,
-  AnalyzeReviewsRequestSchema,
-  ScanResponse,
+  CheckReviewsRequest,
+  CheckReviewsRequestSchema,
+  CheckResponse,
   ErrorResponse,
   HealthResponse,
 } from './types/api.js';
@@ -61,14 +61,12 @@ fastify.get('/health', async (): Promise<HealthResponse> => {
 
 // Amazon review checking endpoint
 fastify.post<{
-  Body: AnalyzeReviewsRequest;
-  Reply: ScanResponse | ErrorResponse;
+  Body: CheckReviewsRequest;
+  Reply: CheckResponse | ErrorResponse;
 }>('/check/amazon/reviews', async (request, reply) => {
   try {
     // Validate request body using Zod schema
-    const validationResult = AnalyzeReviewsRequestSchema.safeParse(
-      request.body
-    );
+    const validationResult = CheckReviewsRequestSchema.safeParse(request.body);
 
     if (!validationResult.success) {
       const validationErrors = validationResult.error.errors.map((err) => ({
@@ -93,14 +91,14 @@ fastify.post<{
     // Combine all reviews for analysis
     const combinedReviewText = reviews.join('\n\n---\n\n');
 
-    const result = await analyzeReview(
+    const result = await checkReview(
       combinedReviewText,
       productContext,
       request.log
     );
 
     return {
-      analysis: result,
+      result: result,
       timestamp: new Date().toISOString(),
     };
   } catch (error) {

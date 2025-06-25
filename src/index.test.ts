@@ -1,23 +1,23 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import { analyzeReview } from './services/review-analyzer/index.js';
+import { checkReview } from './services/review-checker/index.js';
 import {
-  AnalyzeReviewsRequest,
-  AnalyzeReviewsRequestSchema,
-  ScanResponse,
+  CheckReviewsRequest,
+  CheckReviewsRequestSchema,
+  CheckResponse,
   ErrorResponse,
   ValidationErrorResponse,
   ServiceErrorResponse,
   HealthResponse,
 } from './types/api.js';
 
-// Mock the review analyzer service
-vi.mock('./services/review-analyzer/index.js', () => ({
-  analyzeReview: vi.fn(),
+// Mock the review checker service
+vi.mock('./services/review-checker/index.js', () => ({
+  checkReview: vi.fn(),
 }));
 
-const mockAnalyzeReview = vi.mocked(analyzeReview);
+const mockCheckReview = vi.mocked(checkReview);
 
 describe('API Endpoints Integration Tests', () => {
   let fastify: FastifyInstance;
@@ -40,12 +40,12 @@ describe('API Endpoints Integration Tests', () => {
 
     // Amazon review checking endpoint
     fastify.post<{
-      Body: AnalyzeReviewsRequest;
-      Reply: ScanResponse | ErrorResponse;
+      Body: CheckReviewsRequest;
+      Reply: CheckResponse | ErrorResponse;
     }>('/check/amazon/reviews', async (request, reply) => {
       try {
         // Validate request body using Zod schema
-        const validationResult = AnalyzeReviewsRequestSchema.safeParse(
+        const validationResult = CheckReviewsRequestSchema.safeParse(
           request.body
         );
 
@@ -72,14 +72,14 @@ describe('API Endpoints Integration Tests', () => {
         // Combine all reviews for analysis
         const combinedReviewText = reviews.join('\n\n---\n\n');
 
-        const result = await analyzeReview(
+        const result = await checkReview(
           combinedReviewText,
           productContext,
           request.log
         );
 
         return {
-          analysis: result,
+          result: result,
           timestamp: new Date().toISOString(),
         };
       } catch (error) {
@@ -123,7 +123,7 @@ describe('API Endpoints Integration Tests', () => {
   });
 
   describe('POST /check/amazon/reviews', () => {
-    it('should analyze product reviews successfully', async () => {
+    it('should check reviews successfully', async () => {
       const mockAnalysis = {
         isFake: true,
         confidence: 0.85,
@@ -132,9 +132,9 @@ describe('API Endpoints Integration Tests', () => {
         summary: 'Product has suspicious review patterns',
       };
 
-      mockAnalyzeReview.mockResolvedValue(mockAnalysis);
+      mockCheckReview.mockResolvedValue(mockAnalysis);
 
-      const requestBody: AnalyzeReviewsRequest = {
+      const requestBody: CheckReviewsRequest = {
         reviews: [
           'Best product ever! Amazing quality!',
           'Absolutely perfect in every way! Highly recommend!',
@@ -156,13 +156,13 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.statusCode).toBe(200);
 
-      const data = JSON.parse(response.payload) as ScanResponse;
-      expect(data.analysis).toEqual(mockAnalysis);
+      const data = JSON.parse(response.payload) as CheckResponse;
+      expect(data.result).toEqual(mockAnalysis);
       expect(data.timestamp).toBeDefined();
       expect(typeof data.timestamp).toBe('string');
 
       // Verify the service was called with correct parameters
-      expect(mockAnalyzeReview).toHaveBeenCalledWith(
+      expect(mockCheckReview).toHaveBeenCalledWith(
         expect.stringContaining('Best product ever'),
         requestBody.productContext,
         expect.any(Object) // Fastify logger
@@ -183,7 +183,7 @@ describe('API Endpoints Integration Tests', () => {
       expect(data.details).toContain('reviews');
       expect(data.validationErrors).toBeDefined();
       expect(data.timestamp).toBeDefined();
-      expect(mockAnalyzeReview).not.toHaveBeenCalled();
+      expect(mockCheckReview).not.toHaveBeenCalled();
     });
 
     it('should return 400 when reviews array is empty', async () => {
@@ -202,7 +202,7 @@ describe('API Endpoints Integration Tests', () => {
       expect(data.details).toContain('At least one review is required');
       expect(data.validationErrors).toBeDefined();
       expect(data.timestamp).toBeDefined();
-      expect(mockAnalyzeReview).not.toHaveBeenCalled();
+      expect(mockCheckReview).not.toHaveBeenCalled();
     });
 
     it('should work without productContext', async () => {
@@ -214,9 +214,9 @@ describe('API Endpoints Integration Tests', () => {
         summary: 'Review seems authentic',
       };
 
-      mockAnalyzeReview.mockResolvedValue(mockAnalysis);
+      mockCheckReview.mockResolvedValue(mockAnalysis);
 
-      const requestBody: AnalyzeReviewsRequest = {
+      const requestBody: CheckReviewsRequest = {
         reviews: ['Great product, works as expected. Good value for money.'],
       };
 
@@ -228,9 +228,9 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.statusCode).toBe(200);
 
-      const data = JSON.parse(response.payload) as ScanResponse;
-      expect(data.analysis).toEqual(mockAnalysis);
-      expect(mockAnalyzeReview).toHaveBeenCalledWith(
+      const data = JSON.parse(response.payload) as CheckResponse;
+      expect(data.result).toEqual(mockAnalysis);
+      expect(mockCheckReview).toHaveBeenCalledWith(
         'Great product, works as expected. Good value for money.',
         undefined,
         expect.any(Object)
@@ -238,9 +238,9 @@ describe('API Endpoints Integration Tests', () => {
     });
 
     it('should handle service errors gracefully', async () => {
-      mockAnalyzeReview.mockRejectedValue(new Error('Service unavailable'));
+      mockCheckReview.mockRejectedValue(new Error('Service unavailable'));
 
-      const requestBody: AnalyzeReviewsRequest = {
+      const requestBody: CheckReviewsRequest = {
         reviews: ['Test review'],
       };
 
@@ -257,7 +257,7 @@ describe('API Endpoints Integration Tests', () => {
       expect(data.service).toBe('review-analyzer');
       expect(data.timestamp).toBeDefined();
 
-      expect(mockAnalyzeReview).toHaveBeenCalledWith(
+      expect(mockCheckReview).toHaveBeenCalledWith(
         'Test review',
         undefined,
         expect.any(Object) // logger
