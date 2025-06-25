@@ -48,8 +48,11 @@ export async function checkReview(
     }
 
     const rawAnalysis = JSON.parse(response);
-    const analysis = ReviewCheckerSchema.parse(rawAnalysis);
 
+    // Log the raw response for debugging
+    logger?.debug({ rawAnalysis }, 'Raw OpenAI response');
+
+    const analysis = ReviewCheckerSchema.parse(rawAnalysis);
     return analysis;
   } catch (error) {
     logger?.error({ err: error }, 'Error analyzing review');
