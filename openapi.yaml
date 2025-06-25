@@ -1,0 +1,268 @@
+openapi: 3.0.3
+info:
+  title: TrueStar API
+  description: API for fake review detection services
+  version: 1.0.0
+  contact:
+    name: TrueStar Support
+
+servers:
+  - url: http://localhost:3001
+    description: Local development
+  - url: https://api.truestar.pro
+    description: Production
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: getHealth
+      tags:
+        - System
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+
+  /check/amazon/reviews:
+    post:
+      summary: Check Amazon reviews for authenticity
+      operationId: checkAmazonReviews
+      tags:
+        - Review Analysis
+      security:
+        - apiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckReviewsRequest'
+      responses:
+        '200':
+          description: Review analysis completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckReviewsResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: API key for authentication
+
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - timestamp
+      properties:
+        status:
+          type: string
+          enum: [ok]
+          example: ok
+        timestamp:
+          type: string
+          format: date-time
+          example: '2024-12-22T10:00:00.000Z'
+
+    CheckReviewsRequest:
+      type: object
+      required:
+        - reviews
+      properties:
+        reviews:
+          type: array
+          minItems: 1
+          maxItems: 100
+          description: Array of reviews to check
+          items:
+            type: object
+            required:
+              - text
+            properties:
+              text:
+                type: string
+                minLength: 1
+                description: The review text
+                example: "This product is amazing! Best purchase ever!"
+              reviewerId:
+                type: string
+                description: Anonymized reviewer identifier
+              rating:
+                type: integer
+                minimum: 1
+                maximum: 5
+                description: Star rating given by reviewer
+              verifiedPurchase:
+                type: boolean
+                description: Whether the reviewer has a verified purchase
+              reviewDate:
+                type: string
+                format: date
+                description: Date when the review was posted
+
+    ProductContext:
+      type: object
+      description: Optional context about the product being reviewed
+      properties:
+        title:
+          type: string
+          description: Product title
+          example: "Wireless Bluetooth Headphones"
+        brand:
+          type: string
+          description: Product brand
+          example: "TechBrand"
+        category:
+          type: string
+          description: Product category
+          example: "Electronics"
+        price:
+          type: number
+          format: float
+          minimum: 0
+          description: Product price
+          example: 99.99
+        rating:
+          type: number
+          format: float
+          minimum: 1
+          maximum: 5
+          description: Product average rating
+          example: 4.5
+
+    CheckReviewsResponse:
+      type: object
+      required:
+        - results
+        - summary
+        - timestamp
+      properties:
+        results:
+          type: array
+          description: Analysis results for each review
+          items:
+            $ref: '#/components/schemas/ReviewAnalysis'
+        summary:
+          type: object
+          description: Overall summary statistics
+          properties:
+            totalReviews:
+              type: integer
+              description: Total number of reviews analyzed
+            fakeCount:
+              type: integer
+              description: Number of reviews identified as fake
+            realCount:
+              type: integer
+              description: Number of reviews identified as real
+            averageConfidence:
+              type: number
+              format: float
+              description: Average confidence score across all analyses
+        timestamp:
+          type: string
+          format: date-time
+          example: '2024-12-22T10:00:00.000Z'
+
+    ReviewAnalysis:
+      type: object
+      required:
+        - isFake
+        - confidence
+        - reasons
+        - flags
+        - summary
+      properties:
+        isFake:
+          type: boolean
+          description: Whether the review is likely fake
+          example: true
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Confidence level of the analysis (0-1)
+          example: 0.85
+        reasons:
+          type: array
+          items:
+            type: string
+          description: Specific reasons for the assessment
+          example: ["Excessive positivity without specific details", "Generic language patterns"]
+        flags:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReviewFlag'
+          description: Detected red flags
+          example: ["excessive_positivity", "generic_language"]
+        summary:
+          type: string
+          description: Brief explanation of the analysis
+          example: "Review appears fake due to generic praise without specific product details"
+
+    ReviewFlag:
+      type: string
+      enum:
+        - generic_language
+        - excessive_positivity
+        - incentivized_review
+        - competitor_mention
+        - unnatural_language
+        - repetitive_phrases
+        - suspicious_timing
+        - verified_purchase_missing
+      description: Possible red flags in reviews
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request"
+        details:
+          type: string
+          description: Additional error details
+          example: "Review text is required"
+
+tags:
+  - name: System
+    description: System health and status endpoints
+  - name: Review Analysis
+    description: Review analysis endpoints
