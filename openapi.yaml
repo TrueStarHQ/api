@@ -33,7 +33,8 @@ paths:
       summary: Check Amazon reviews for authenticity
       operationId: checkAmazonReviews
       tags:
-        - Review Analyzer
+        - Reviews
+        - Amazon
       requestBody:
         required: true
         content:
@@ -91,38 +92,6 @@ components:
             minLength: 1
             description: The review text
             example: "This product is amazing! Best purchase ever!"
-        productContext:
-          $ref: '#/components/schemas/ProductContext'
-
-    ProductContext:
-      type: object
-      description: Optional context about the product being reviewed
-      properties:
-        title:
-          type: string
-          description: Product title
-          example: "Wireless Bluetooth Headphones"
-        brand:
-          type: string
-          description: Product brand
-          example: "TechBrand"
-        category:
-          type: string
-          description: Product category
-          example: "Electronics"
-        price:
-          type: number
-          format: float
-          minimum: 0
-          description: Product price
-          example: 99.99
-        rating:
-          type: number
-          format: float
-          minimum: 1
-          maximum: 5
-          description: Product average rating
-          example: 4.5
 
     CheckAmazonReviewsResponse:
       type: object
@@ -204,5 +173,6 @@ components:
 tags:
   - name: System
     description: System health and status endpoints
-  - name: Review Analyzer
-    description: Review analysis endpoints
+  - name: Reviews
+    description: Review checker endpoints
+  - name: Amazon
