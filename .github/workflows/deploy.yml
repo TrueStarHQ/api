@@ -36,10 +36,14 @@ jobs:
       run: gcloud auth configure-docker ${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev
     
     - name: Build Docker image
-      run: docker build -t ${{ env.ARTIFACT_REGISTRY }}/api:${{ github.sha }} .
+      run: |
+        docker build -t ${{ env.ARTIFACT_REGISTRY }}/api:${{ github.sha }} .
+        docker tag ${{ env.ARTIFACT_REGISTRY }}/api:${{ github.sha }} ${{ env.ARTIFACT_REGISTRY }}/api:latest
     
     - name: Push Docker image
-      run: docker push ${{ env.ARTIFACT_REGISTRY }}/api:${{ github.sha }}
+      run: |
+        docker push ${{ env.ARTIFACT_REGISTRY }}/api:${{ github.sha }}
+        docker push ${{ env.ARTIFACT_REGISTRY }}/api:latest
     
     - name: Deploy to Cloud Run
       run: |
