@@ -19,7 +19,8 @@ declare module 'fastify' {
   }
 }
 
-function getLoggerConfig() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getLoggerConfig(): any {
   if (process.env.NODE_ENV === 'production') {
     return {
       level: 'info',
