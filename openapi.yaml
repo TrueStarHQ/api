@@ -143,11 +143,16 @@ components:
     ReviewData:
       type: object
       required:
+        - id
         - rating
         - text
         - author
         - verified
       properties:
+        id:
+          type: string
+          description: Unique identifier for the review
+          example: "RQ1XFNZ96Y1ST"
         rating:
           type: number
           minimum: 1
