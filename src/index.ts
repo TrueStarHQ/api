@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { checkReview } from './services/review-checker/index.js';
 import {
   CheckAmazonReviewsRequest,
@@ -23,7 +24,7 @@ function getLoggerConfig() {
     return {
       level: 'info',
       serializers: {
-        req: (req) => ({
+        req: (req: FastifyRequest) => ({
           method: req.method,
           url: req.url,
           headers: {
@@ -31,7 +32,7 @@ function getLoggerConfig() {
             'x-forwarded-for': req.headers['x-forwarded-for'],
           },
         }),
-        res: (res) => ({
+        res: (res: FastifyReply) => ({
           statusCode: res.statusCode,
         }),
       },
