@@ -23,7 +23,7 @@ function getLoggerConfig() {
     return {
       level: 'info',
       serializers: {
-        req: (req: any) => ({
+        req: (req) => ({
           method: req.method,
           url: req.url,
           headers: {
@@ -31,13 +31,13 @@ function getLoggerConfig() {
             'x-forwarded-for': req.headers['x-forwarded-for'],
           },
         }),
-        res: (res: any) => ({
+        res: (res) => ({
           statusCode: res.statusCode,
         }),
       },
     };
   }
-  
+
   return {
     transport: { target: 'pino-pretty' },
   };

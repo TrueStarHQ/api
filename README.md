@@ -4,7 +4,7 @@ RESTful API service for analyzing product reviews and detecting potentially fake
 
 ## Overview
 
-This API serves as the backend for the TrueStar browser extension, providing review analysis capabilities powered by OpenAI's language models.
+This API serves as the backend for the TrueStar browser extension, providing product review analysis capabilities powered by OpenAI's language models.
 
 ## Architecture
 
@@ -13,7 +13,7 @@ This API serves as the backend for the TrueStar browser extension, providing rev
 - **Validation**: Zod schemas
 - **API Documentation**: OpenAPI 3.1 specification
 
-### API-First Development
+### API-first development
 
 The OpenAPI specification (`openapi.yaml`) serves as the single source of truth for the API contract. TypeScript types and Zod validation schemas are automatically generated from this spec using Orval, ensuring type safety and consistency across the codebase.
 
@@ -35,7 +35,7 @@ yarn build
 
 ## Deployment
 
-The API is containerized using Docker and deployed to Google Cloud Run. See `Dockerfile` for the container configuration.
+The API is containerized using Docker and deployed to Google Cloud Run using GitHub Actions. See `Dockerfile` for the container configuration.
 
 ## Environment Variables
 
