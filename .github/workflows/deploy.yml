@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: ["Test"]
+    types: [completed]
+    branches: [main]
+
+env:
+  GOOGLE_CLOUD_PROJECT_ID: ${{ vars.GOOGLE_CLOUD_PROJECT_ID }}
+  GOOGLE_CLOUD_REGION: ${{ vars.GOOGLE_CLOUD_REGION }}
+  NODE_VERSION: '20'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: prod
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    
+    env:
+      ARTIFACT_REGISTRY: ${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev/${{ vars.GOOGLE_CLOUD_PROJECT_ID }}/main
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - id: auth
+      name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GOOGLE_CREDENTIALS }}
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+    
+    - name: Configure Docker for Artifact Registry
+      run: gcloud auth configure-docker ${{ vars.GOOGLE_CLOUD_REGION }}-docker.pkg.dev
+    
+    - name: Build Docker image
+      run: docker build -t ${{ env.ARTIFACT_REGISTRY }}/api:${{ github.sha }} .
+    
+    - name: Push Docker image
+      run: docker push ${{ env.ARTIFACT_REGISTRY }}/api:${{ github.sha }}
+    
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy api \
+          --image ${{ env.ARTIFACT_REGISTRY }}/api:${{ github.sha }} \
+          --region ${{ vars.GOOGLE_CLOUD_REGION }} \
+          --platform managed \
+          --allow-unauthenticated
