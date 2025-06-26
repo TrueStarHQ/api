@@ -91,7 +91,7 @@ describe('Environment Configuration', () => {
         'Environment validation failed'
       );
       expect(() => validateEnvironment()).toThrow(
-        'PORT: Port must be a valid number'
+        'Expected number, received nan'
       );
     });
 

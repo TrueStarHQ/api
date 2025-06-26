@@ -65,16 +65,17 @@ describe('API Endpoints Integration Tests', () => {
           });
         }
 
-        const { reviews, productContext } = validationResult.data;
+        const { reviews } = validationResult.data;
 
-        // Combine all reviews for analysis
-        const combinedReviewText = reviews.join('\n\n---\n\n');
+        // Convert ReviewData objects to formatted strings for analysis
+        const combinedReviewText = reviews
+          .map(
+            (review) =>
+              `Rating: ${review.rating}/5\nAuthor: ${review.author}\nVerified: ${review.verified ? 'Yes' : 'No'}\nReview: ${review.text}`
+          )
+          .join('\n\n---\n\n');
 
-        const result = await checkReview(
-          combinedReviewText,
-          productContext,
-          request.log
-        );
+        const result = await checkReview(combinedReviewText, request.log);
 
         return {
           result: result,
@@ -134,16 +135,19 @@ describe('API Endpoints Integration Tests', () => {
 
       const requestBody: CheckAmazonReviewsRequest = {
         reviews: [
-          'Best product ever! Amazing quality!',
-          'Absolutely perfect in every way! Highly recommend!',
+          {
+            rating: 5,
+            text: 'Best product ever! Amazing quality!',
+            author: 'John D.',
+            verified: true,
+          },
+          {
+            rating: 5,
+            text: 'Absolutely perfect in every way! Highly recommend!',
+            author: 'Jane S.',
+            verified: true,
+          },
         ],
-        productContext: {
-          title: 'Test Product',
-          brand: 'Test Brand',
-          category: 'Electronics',
-          price: 29.99,
-          rating: 4.5,
-        },
       };
 
       const response = await fastify.inject({
@@ -162,7 +166,6 @@ describe('API Endpoints Integration Tests', () => {
       // Verify the service was called with correct parameters
       expect(mockCheckReview).toHaveBeenCalledWith(
         expect.stringContaining('Best product ever'),
-        requestBody.productContext,
         expect.any(Object) // Fastify logger
       );
     });
@@ -197,7 +200,7 @@ describe('API Endpoints Integration Tests', () => {
 
       const data = JSON.parse(response.payload) as ValidationErrorResponse;
       expect(data.error).toBe('VALIDATION_ERROR');
-      expect(data.details).toContain('At least one review is required');
+      expect(data.details).toContain('Array must contain at least 1 element');
       expect(data.validationErrors).toBeDefined();
       expect(data.timestamp).toBeDefined();
       expect(mockCheckReview).not.toHaveBeenCalled();
@@ -215,7 +218,14 @@ describe('API Endpoints Integration Tests', () => {
       mockCheckReview.mockResolvedValue(mockAnalysis);
 
       const requestBody: CheckAmazonReviewsRequest = {
-        reviews: ['Great product, works as expected. Good value for money.'],
+        reviews: [
+          {
+            rating: 4,
+            text: 'Great product, works as expected. Good value for money.',
+            author: 'Mike R.',
+            verified: true,
+          },
+        ],
       };
 
       const response = await fastify.inject({
@@ -229,8 +239,7 @@ describe('API Endpoints Integration Tests', () => {
       const data = JSON.parse(response.payload) as CheckAmazonReviewsResponse;
       expect(data.result).toEqual(mockAnalysis);
       expect(mockCheckReview).toHaveBeenCalledWith(
-        'Great product, works as expected. Good value for money.',
-        undefined,
+        expect.stringContaining('Great product, works as expected'),
         expect.any(Object)
       );
     });
@@ -239,7 +248,14 @@ describe('API Endpoints Integration Tests', () => {
       mockCheckReview.mockRejectedValue(new Error('Service unavailable'));
 
       const requestBody: CheckAmazonReviewsRequest = {
-        reviews: ['Test review'],
+        reviews: [
+          {
+            rating: 3,
+            text: 'Test review',
+            author: 'Test User',
+            verified: false,
+          },
+        ],
       };
 
       const response = await fastify.inject({
@@ -256,8 +272,7 @@ describe('API Endpoints Integration Tests', () => {
       expect(data.timestamp).toBeDefined();
 
       expect(mockCheckReview).toHaveBeenCalledWith(
-        'Test review',
-        undefined,
+        expect.stringContaining('Test review'),
         expect.any(Object) // logger
       );
     });
