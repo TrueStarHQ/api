@@ -21,7 +21,7 @@ describe('Environment Configuration', () => {
   describe('validateEnvironment', () => {
     it('should validate when all required environment variables are present', () => {
       process.env.OPENAI_API_KEY = 'test-api-key';
-      process.env.PORT = '3001';
+      process.env.PORT = '8080';
       process.env.HOST = 'localhost';
       process.env.NODE_ENV = 'development';
 
@@ -29,7 +29,7 @@ describe('Environment Configuration', () => {
 
       expect(config).toEqual({
         OPENAI_API_KEY: 'test-api-key',
-        PORT: 3001,
+        PORT: 8080,
         HOST: 'localhost',
         NODE_ENV: 'development',
         OPENAI_MODEL: 'gpt-4o', // default value
@@ -45,7 +45,7 @@ describe('Environment Configuration', () => {
       expect(config).toEqual({
         OPENAI_API_KEY: 'test-api-key',
         // Default values:
-        PORT: 3001,
+        PORT: 8080,
         HOST: '0.0.0.0',
         NODE_ENV: 'development',
         OPENAI_MODEL: 'gpt-4o',

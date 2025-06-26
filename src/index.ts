@@ -18,10 +18,33 @@ declare module 'fastify' {
   }
 }
 
-const fastify = Fastify({
-  logger: {
+function getLoggerConfig() {
+  if (process.env.NODE_ENV === 'production') {
+    return {
+      level: 'info',
+      serializers: {
+        req: (req: any) => ({
+          method: req.method,
+          url: req.url,
+          headers: {
+            'user-agent': req.headers['user-agent'],
+            'x-forwarded-for': req.headers['x-forwarded-for'],
+          },
+        }),
+        res: (res: any) => ({
+          statusCode: res.statusCode,
+        }),
+      },
+    };
+  }
+  
+  return {
     transport: { target: 'pino-pretty' },
-  },
+  };
+}
+
+const fastify = Fastify({
+  logger: getLoggerConfig(),
 });
 
 // Register CORS plugin

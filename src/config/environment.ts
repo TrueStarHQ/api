@@ -3,7 +3,7 @@ import { z } from 'zod';
 // Environment variable schema
 const EnvironmentSchema = z.object({
   OPENAI_API_KEY: z.string().min(1, 'OpenAI API key is required'),
-  PORT: z.coerce.number().int().positive().optional().default(3001),
+  PORT: z.coerce.number().int().positive().optional().default(8080),
   HOST: z.string().optional().default('0.0.0.0'),
   NODE_ENV: z
     .enum(['development', 'production', 'test'])

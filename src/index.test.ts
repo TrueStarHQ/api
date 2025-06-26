@@ -6,8 +6,6 @@ import {
   CheckAmazonReviewsRequest,
   CheckAmazonReviewsResponse,
   ErrorResponse,
-  ValidationErrorResponse,
-  ServiceErrorResponse,
   HealthResponse,
 } from './types/generated/index.js';
 import { checkAmazonReviewsBody } from './types/generated/zod.js';
@@ -60,8 +58,6 @@ describe('API Endpoints Integration Tests', () => {
           return reply.status(400).send({
             error: 'VALIDATION_ERROR',
             details,
-            validationErrors,
-            timestamp: new Date().toISOString(),
           });
         }
 
@@ -85,10 +81,8 @@ describe('API Endpoints Integration Tests', () => {
         fastify.log.error(error);
         return reply.status(500).send({
           error: 'SERVICE_ERROR',
-          service: 'review-analyzer',
           details:
             'Internal server error occurred while processing the request',
-          timestamp: new Date().toISOString(),
         });
       }
     });
@@ -179,11 +173,9 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.statusCode).toBe(400);
 
-      const data = JSON.parse(response.payload) as ValidationErrorResponse;
+      const data = JSON.parse(response.payload) as ErrorResponse;
       expect(data.error).toBe('VALIDATION_ERROR');
       expect(data.details).toContain('reviews');
-      expect(data.validationErrors).toBeDefined();
-      expect(data.timestamp).toBeDefined();
       expect(mockCheckReview).not.toHaveBeenCalled();
     });
 
@@ -198,50 +190,10 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.statusCode).toBe(400);
 
-      const data = JSON.parse(response.payload) as ValidationErrorResponse;
+      const data = JSON.parse(response.payload) as ErrorResponse;
       expect(data.error).toBe('VALIDATION_ERROR');
       expect(data.details).toContain('Array must contain at least 1 element');
-      expect(data.validationErrors).toBeDefined();
-      expect(data.timestamp).toBeDefined();
       expect(mockCheckReview).not.toHaveBeenCalled();
-    });
-
-    it('should work without productContext', async () => {
-      const mockAnalysis = {
-        isFake: false,
-        confidence: 0.3,
-        reasons: ['Review appears genuine'],
-        flags: [],
-        summary: 'Review seems authentic',
-      };
-
-      mockCheckReview.mockResolvedValue(mockAnalysis);
-
-      const requestBody: CheckAmazonReviewsRequest = {
-        reviews: [
-          {
-            rating: 4,
-            text: 'Great product, works as expected. Good value for money.',
-            author: 'Mike R.',
-            verified: true,
-          },
-        ],
-      };
-
-      const response = await fastify.inject({
-        method: 'POST',
-        url: '/check/amazon/reviews',
-        payload: requestBody,
-      });
-
-      expect(response.statusCode).toBe(200);
-
-      const data = JSON.parse(response.payload) as CheckAmazonReviewsResponse;
-      expect(data.result).toEqual(mockAnalysis);
-      expect(mockCheckReview).toHaveBeenCalledWith(
-        expect.stringContaining('Great product, works as expected'),
-        expect.any(Object)
-      );
     });
 
     it('should handle service errors gracefully', async () => {
@@ -266,10 +218,8 @@ describe('API Endpoints Integration Tests', () => {
 
       expect(response.statusCode).toBe(500);
 
-      const data = JSON.parse(response.payload) as ServiceErrorResponse;
+      const data = JSON.parse(response.payload) as ErrorResponse;
       expect(data.error).toBe('SERVICE_ERROR');
-      expect(data.service).toBe('review-analyzer');
-      expect(data.timestamp).toBeDefined();
 
       expect(mockCheckReview).toHaveBeenCalledWith(
         expect.stringContaining('Test review'),

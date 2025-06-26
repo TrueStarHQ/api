@@ -1,12 +1,29 @@
 import OpenAI from 'openai';
 import { FastifyBaseLogger } from 'fastify';
+import { z } from 'zod';
 import {
   ReviewChecker,
-  ReviewCheckerSchema,
-  ProductContext,
 } from '../../types/generated/index.js';
 import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
 import { getConfig } from '../../config/environment.js';
+
+// Zod schema for validating OpenAI response
+const ReviewCheckerSchema = z.object({
+  isFake: z.boolean(),
+  confidence: z.number().min(0).max(1),
+  reasons: z.array(z.string()),
+  flags: z.array(z.enum([
+    'generic_language',
+    'excessive_positivity',
+    'incentivized_review',
+    'competitor_mention',
+    'unnatural_language',
+    'repetitive_phrases',
+    'suspicious_timing',
+    'verified_purchase_missing'
+  ])),
+  summary: z.string()
+});
 
 let openai: OpenAI;
 
@@ -22,11 +39,10 @@ function getOpenAIClient(): OpenAI {
 
 export async function checkReview(
   reviewText: string,
-  productContext?: ProductContext,
   logger?: FastifyBaseLogger
 ): Promise<ReviewChecker> {
   const systemPrompt = SYSTEM_REVIEW_CHECKER_PROMPT;
-  const userPrompt = userReviewPrompt(reviewText, productContext);
+  const userPrompt = userReviewPrompt(reviewText);
 
   try {
     const config = getConfig();

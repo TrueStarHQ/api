@@ -37,7 +37,6 @@ describe('Review Checker Service', () => {
 
     const result = await checkReview(
       'This product is amazing!',
-      undefined,
       undefined
     );
 
@@ -56,7 +55,7 @@ describe('Review Checker Service', () => {
     const mockOpenAI = new OpenAI({ apiKey: 'test-key' });
     mockOpenAI.chat.completions.create = mockCreate;
 
-    const result = await checkReview('Test review', undefined, undefined);
+    const result = await checkReview('Test review', undefined);
 
     expect(result).toEqual({
       isFake: false,

@@ -1,5 +1,4 @@
 // Individual prompt definitions
-import { ProductContext } from '../../types/generated/index.js';
 
 export const SYSTEM_REVIEW_CHECKER_PROMPT = `
 You are an expert at detecting fake product reviews. Check the provided review and determine if it's likely to be fake or genuine.
@@ -31,21 +30,9 @@ Respond with a JSON object containing:
 Be thorough but concise. Focus on specific indicators rather than general impressions.`;
 
 export function userReviewPrompt(
-  reviewText: string,
-  productContext?: ProductContext
+  reviewText: string
 ): string {
   return `Review to check: "${reviewText}"
-
-${
-  productContext
-    ? `Product context:
-- Title: ${productContext.title || 'Unknown'}
-- Brand: ${productContext.brand || 'Unknown'}
-- Category: ${productContext.category || 'Unknown'}
-- Price: ${productContext.price ? `$${productContext.price}` : 'Unknown'}
-- Rating: ${productContext.rating ? `${productContext.rating}/5` : 'Unknown'}`
-    : ''
-}
 
 Check this review for authenticity.`;
 }
