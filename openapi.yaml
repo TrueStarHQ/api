@@ -172,6 +172,32 @@ components:
           type: boolean
           description: Whether this is a verified purchase
           example: true
+        date:
+          type: string
+          description: The date when the review was posted
+          example: "2024-01-15"
+        helpfulVotes:
+          type: number
+          description: Number of helpful votes
+          example: 42
+        totalVotes:
+          type: number
+          description: Total number of votes
+          example: 50
+        productVariation:
+          type: string
+          description: Product variation purchased
+          example: "Color: Blue, Size: Large"
+        isVineReview:
+          type: boolean
+          description: Whether this is a Vine review
+          example: false
+        badges:
+          type: array
+          items:
+            type: string
+          description: Badges associated with the review
+          example: ["Verified Purchase", "Top Contributor"]
 
     ReviewFlag:
       type: string

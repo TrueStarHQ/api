@@ -130,12 +130,14 @@ describe('API Endpoints Integration Tests', () => {
       const requestBody: CheckAmazonReviewsRequest = {
         reviews: [
           {
+            id: 'review-1',
             rating: 5,
             text: 'Best product ever! Amazing quality!',
             author: 'John D.',
             verified: true,
           },
           {
+            id: 'review-2',
             rating: 5,
             text: 'Absolutely perfect in every way! Highly recommend!',
             author: 'Jane S.',
@@ -202,6 +204,7 @@ describe('API Endpoints Integration Tests', () => {
       const requestBody: CheckAmazonReviewsRequest = {
         reviews: [
           {
+            id: 'review-test',
             rating: 3,
             text: 'Test review',
             author: 'Test User',
