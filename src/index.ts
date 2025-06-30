@@ -1,7 +1,11 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type {
+  FastifyRequest,
+  FastifyReply,
+  FastifyServerOptions,
+} from 'fastify';
 import { checkReview } from './services/review-checker/index.js';
 import {
   CheckAmazonReviewsRequest,
@@ -10,7 +14,7 @@ import {
   HealthResponse,
 } from './types/generated/index.js';
 import { checkAmazonReviewsBody } from './types/generated/zod.js';
-import { validateEnvironment } from './config/environment.js';
+import { validateEnvironment, getConfig } from './config/environment.js';
 
 // Extend Fastify request type to include startTime
 declare module 'fastify' {
@@ -19,8 +23,7 @@ declare module 'fastify' {
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getLoggerConfig(): any {
+function getLoggerConfig(): FastifyServerOptions['logger'] {
   if (process.env.NODE_ENV === 'production') {
     return {
       level: 'info',
@@ -52,23 +55,10 @@ const fastify = Fastify({
 // Register CORS plugin
 await fastify.register(cors, {
   origin: (origin, callback) => {
-    // Log the actual origin for debugging
+    const config = getConfig();
     fastify.log.info({ origin }, 'CORS origin check');
 
-    // Allow Amazon domains (where the extension runs) and no origin
-    const allowedOrigins = [
-      'https://amazon.com',
-      'https://www.amazon.com',
-      'https://www.amazon.ca',
-      'https://www.amazon.co.uk',
-      'https://www.amazon.de',
-      'https://www.amazon.fr',
-      'https://www.amazon.it',
-      'https://www.amazon.es',
-      'https://www.amazon.com.au',
-    ];
-
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || config.ALLOWED_ORIGINS.includes(origin)) {
       fastify.log.info({ origin }, 'CORS origin allowed');
       callback(null, true);
     } else {

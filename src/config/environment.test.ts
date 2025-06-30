@@ -33,6 +33,17 @@ describe('Environment Configuration', () => {
         HOST: 'localhost',
         NODE_ENV: 'development',
         OPENAI_MODEL: 'gpt-4o', // default value
+        ALLOWED_ORIGINS: [
+          'https://amazon.com',
+          'https://www.amazon.com',
+          'https://www.amazon.ca',
+          'https://www.amazon.co.uk',
+          'https://www.amazon.de',
+          'https://www.amazon.fr',
+          'https://www.amazon.it',
+          'https://www.amazon.es',
+          'https://www.amazon.com.au',
+        ],
       });
     });
 
@@ -49,6 +60,17 @@ describe('Environment Configuration', () => {
         HOST: '0.0.0.0',
         NODE_ENV: 'development',
         OPENAI_MODEL: 'gpt-4o',
+        ALLOWED_ORIGINS: [
+          'https://amazon.com',
+          'https://www.amazon.com',
+          'https://www.amazon.ca',
+          'https://www.amazon.co.uk',
+          'https://www.amazon.de',
+          'https://www.amazon.fr',
+          'https://www.amazon.it',
+          'https://www.amazon.es',
+          'https://www.amazon.com.au',
+        ],
       });
     });
 

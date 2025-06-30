@@ -216,6 +216,7 @@ components:
       type: object
       required:
         - error
+        - timestamp
       properties:
         error:
           type: string
@@ -225,6 +226,10 @@ components:
           type: string
           description: Additional error details
           example: "Review text is required"
+        timestamp:
+          type: string
+          format: date-time
+          example: '2024-12-22T10:00:00.000Z'
 
 tags:
   - name: System

@@ -10,6 +10,13 @@ const EnvironmentSchema = z.object({
     .optional()
     .default('development'),
   OPENAI_MODEL: z.string().optional().default('gpt-4o'),
+  ALLOWED_ORIGINS: z
+    .string()
+    .optional()
+    .default(
+      'https://amazon.com,https://www.amazon.com,https://www.amazon.ca,https://www.amazon.co.uk,https://www.amazon.de,https://www.amazon.fr,https://www.amazon.it,https://www.amazon.es,https://www.amazon.com.au'
+    )
+    .transform((s) => s.split(',')),
 });
 
 export type Environment = z.infer<typeof EnvironmentSchema>;
