@@ -1,10 +1,10 @@
 import OpenAI from 'openai';
-import { FastifyBaseLogger } from 'fastify';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { ReviewChecker, ReviewFlag } from '../../types/generated/index.js';
 import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
 import { getConfig } from '../../config/environment.js';
+import { logger } from '../../lib/logger.js';
 
 // Get flag values from the generated ReviewFlag constant
 const reviewFlagValues = Object.values(ReviewFlag) as [string, ...string[]];
@@ -35,10 +35,7 @@ function getOpenAIClient(): OpenAI {
   return openai;
 }
 
-export async function checkReview(
-  reviewText: string,
-  logger?: FastifyBaseLogger
-): Promise<ReviewChecker> {
+export async function checkReview(reviewText: string): Promise<ReviewChecker> {
   const systemPrompt = SYSTEM_REVIEW_CHECKER_PROMPT;
   const userPrompt = userReviewPrompt(reviewText);
 
@@ -71,12 +68,12 @@ export async function checkReview(
     const rawAnalysis = JSON.parse(response);
 
     // Log the raw response for debugging
-    logger?.debug({ rawAnalysis }, 'Raw OpenAI response');
+    logger.debug({ rawAnalysis }, 'Raw OpenAI response');
 
     const analysis = ReviewCheckerSchema.parse(rawAnalysis);
     return analysis as ReviewChecker;
   } catch (error) {
-    logger?.error({ err: error }, 'Error analyzing review');
+    logger.error({ err: error }, 'Error analyzing review');
 
     // Return a fallback analysis if OpenAI fails
     return {
