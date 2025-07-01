@@ -5,6 +5,7 @@ module.exports = {
       client: 'zod',
       target: './src/types/generated/zod.ts',
       schemas: './src/types/generated',
+      prettier: true,
       override: {
         zod: {
           strict: {
