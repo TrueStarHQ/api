@@ -10,7 +10,7 @@ info:
 servers:
   - url: https://api.truestar.pro
     description: Production
-  - url: http://localhost:3001
+  - url: http://localhost:8080
     description: Local development
 
 paths:
@@ -88,7 +88,7 @@ components:
           minItems: 1
           description: Array of review data to analyze
           items:
-            $ref: '#/components/schemas/ReviewData'
+            $ref: '#/components/schemas/AmazonReview'
 
     CheckAmazonReviewsResponse:
       type: object
@@ -140,7 +140,7 @@ components:
           description: Brief explanation of the analysis
           example: "Review appears fake due to generic praise without specific product details"
 
-    ReviewData:
+    AmazonReview:
       type: object
       required:
         - id
@@ -215,9 +215,14 @@ components:
     ErrorResponse:
       type: object
       required:
+        - statusCode
         - error
         - timestamp
       properties:
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 400
         error:
           type: string
           description: Error message
