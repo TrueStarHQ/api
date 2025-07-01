@@ -11,7 +11,7 @@ vi.mock('openai', () => ({
   })),
 }));
 
-describe('Review Checker Service', () => {
+describe('Review checker service', () => {
   it('should return check result for a review', async () => {
     const mockResponse = {
       isFake: true,
@@ -32,13 +32,10 @@ describe('Review Checker Service', () => {
       ],
     });
 
-    const mockOpenAI = new OpenAI({ apiKey: 'test-key' });
+    const mockOpenAI = new OpenAI({ apiKey: 'fake-api-key' });
     mockOpenAI.chat.completions.create = mockCreate;
 
-    const result = await checkReview(
-      'This product is amazing!',
-      undefined
-    );
+    const result = await checkReview('This product is amazing!', undefined);
 
     expect(result).toBeDefined();
     expect(typeof result.isFake).toBe('boolean');
@@ -52,7 +49,7 @@ describe('Review Checker Service', () => {
     const OpenAI = (await import('openai')).default;
     const mockCreate = vi.fn().mockRejectedValue(new Error('API Error'));
 
-    const mockOpenAI = new OpenAI({ apiKey: 'test-key' });
+    const mockOpenAI = new OpenAI({ apiKey: 'fake-api-key' });
     mockOpenAI.chat.completions.create = mockCreate;
 
     const result = await checkReview('Test review', undefined);

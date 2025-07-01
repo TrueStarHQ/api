@@ -5,7 +5,7 @@ import {
   resetEnvironment,
 } from './environment.js';
 
-describe('Environment Configuration', () => {
+describe('Environment configuration', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
