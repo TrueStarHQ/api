@@ -1,6 +1,17 @@
 import { z } from 'zod';
 
-// Environment variable schema
+const DEFAULT_AMAZON_DOMAINS = [
+  'https://amazon.com',
+  'https://www.amazon.com',
+  'https://www.amazon.ca',
+  'https://www.amazon.co.uk',
+  'https://www.amazon.de',
+  'https://www.amazon.fr',
+  'https://www.amazon.it',
+  'https://www.amazon.es',
+  'https://www.amazon.com.au',
+].join(',');
+
 const EnvironmentSchema = z.object({
   OPENAI_API_KEY: z.string().min(1, 'OpenAI API key is required'),
   PORT: z.coerce.number().int().positive().optional().default(8080),
@@ -13,9 +24,7 @@ const EnvironmentSchema = z.object({
   ALLOWED_ORIGINS: z
     .string()
     .optional()
-    .default(
-      'https://amazon.com,https://www.amazon.com,https://www.amazon.ca,https://www.amazon.co.uk,https://www.amazon.de,https://www.amazon.fr,https://www.amazon.it,https://www.amazon.es,https://www.amazon.com.au'
-    )
+    .default(DEFAULT_AMAZON_DOMAINS)
     .transform((s) => s.split(',')),
 });
 
@@ -24,19 +33,18 @@ export type Environment = z.infer<typeof EnvironmentSchema>;
 let validatedEnv: Environment | null = null;
 
 export function validateEnvironment(): Environment {
-  try {
-    validatedEnv = EnvironmentSchema.parse(process.env);
-    return validatedEnv;
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      const errorMessages = error.errors
-        .map((err) => `${err.path.join('.')}: ${err.message}`)
-        .join('\n');
+  const result = EnvironmentSchema.safeParse(process.env);
 
-      throw new Error(`Environment validation failed:\n${errorMessages}`);
-    }
-    throw error;
+  if (!result.success) {
+    const errorMessages = result.error.errors
+      .map((err) => `${err.path.join('.')}: ${err.message}`)
+      .join('\n');
+
+    throw new Error(`Environment validation failed:\n${errorMessages}`);
   }
+
+  validatedEnv = result.data;
+  return validatedEnv;
 }
 
 export function getConfig(): Environment {
@@ -48,7 +56,6 @@ export function getConfig(): Environment {
   return validatedEnv;
 }
 
-// For testing: reset the cached environment
 export function resetEnvironment(): void {
   validatedEnv = null;
 }
