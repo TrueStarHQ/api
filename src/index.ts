@@ -1,11 +1,7 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import type {
-  FastifyRequest,
-  FastifyReply,
-  FastifyServerOptions,
-} from 'fastify';
+import type { FastifyRequest, FastifyServerOptions } from 'fastify';
 import { checkReview } from './services/review-checker/index.js';
 import {
   CheckAmazonReviewsRequest,
@@ -15,6 +11,7 @@ import {
 } from './types/generated/index.js';
 import { checkAmazonReviewsBody } from './types/generated/zod.js';
 import { validateEnvironment, getConfig } from './config/environment.js';
+import { errorHandlingPlugin } from './plugins/error-handling.js';
 
 // Extend Fastify request type to include startTime
 declare module 'fastify' {
@@ -36,7 +33,7 @@ function getLoggerConfig(): FastifyServerOptions['logger'] {
             'x-forwarded-for': req.headers['x-forwarded-for'],
           },
         }),
-        res: (res: FastifyReply) => ({
+        res: (res: { statusCode: number }) => ({
           statusCode: res.statusCode,
         }),
       },
@@ -52,7 +49,8 @@ const fastify = Fastify({
   logger: getLoggerConfig(),
 });
 
-// Register CORS plugin
+await fastify.register(errorHandlingPlugin);
+
 await fastify.register(cors, {
   origin: (origin, callback) => {
     const config = getConfig();
@@ -69,12 +67,9 @@ await fastify.register(cors, {
   credentials: false,
 });
 
-// Add request/response logging middleware
 fastify.addHook('onRequest', async (request, _reply) => {
-  // Store start time for response logging
   request.startTime = Date.now();
 
-  // Log request
   request.log.debug(
     {
       method: request.method,
@@ -90,7 +85,6 @@ fastify.addHook('onRequest', async (request, _reply) => {
 fastify.addHook('onResponse', async (request, reply) => {
   const duration = Date.now() - request.startTime;
 
-  // Log response
   request.log.debug(
     {
       method: request.method,
@@ -103,12 +97,10 @@ fastify.addHook('onResponse', async (request, reply) => {
   );
 });
 
-// Health check endpoint
 fastify.get('/health', async (): Promise<HealthResponse> => {
   return { status: 'ok', timestamp: new Date().toISOString() };
 });
 
-// Amazon review checking endpoint
 fastify.post<{
   Body: CheckAmazonReviewsRequest;
   Reply: CheckAmazonReviewsResponse | ErrorResponse;
@@ -127,7 +119,8 @@ fastify.post<{
         .map((err) => `${err.field}: ${err.message}`)
         .join(', ');
 
-      return reply.status(400).send({
+      return reply.sendError({
+        statusCode: 400,
         error: 'VALIDATION_ERROR',
         details,
         timestamp: new Date().toISOString(),
@@ -154,7 +147,8 @@ fastify.post<{
       'Error processing review analysis request'
     );
 
-    return reply.status(500).send({
+    return reply.sendError({
+      statusCode: 500,
       error: 'SERVICE_ERROR',
       details: 'Internal server error occurred while processing the request',
       timestamp: new Date().toISOString(),
