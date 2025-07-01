@@ -9,8 +9,8 @@ import {
   HealthResponse,
 } from './types/generated/index.js';
 import { checkAmazonReviewsBody } from './types/generated/zod.js';
+import { errorHandlingPlugin } from './plugins/error-handling.js';
 
-// Mock the review checker service
 vi.mock('./services/review-checker/index.js', () => ({
   checkReview: vi.fn(),
 }));
@@ -21,22 +21,20 @@ describe('API Endpoints Integration Tests', () => {
   let fastify: FastifyInstance;
 
   beforeEach(async () => {
-    // Create a new Fastify instance for each test
     fastify = Fastify({
       logger: false, // Disable logging in tests
     });
 
-    // Register CORS plugin
+    await fastify.register(errorHandlingPlugin);
+
     await fastify.register(cors, {
       origin: ['http://localhost:3000', 'chrome-extension://*'],
     });
 
-    // Health check endpoint
     fastify.get('/health', async (): Promise<HealthResponse> => {
       return { status: 'ok', timestamp: new Date().toISOString() };
     });
 
-    // Amazon review checking endpoint
     fastify.post<{
       Body: CheckAmazonReviewsRequest;
       Reply: CheckAmazonReviewsResponse | ErrorResponse;
@@ -55,10 +53,13 @@ describe('API Endpoints Integration Tests', () => {
             .map((err) => `${err.field}: ${err.message}`)
             .join(', ');
 
-          return reply.status(400).send({
+          const errorResponse: ErrorResponse = {
+            statusCode: 400,
             error: 'VALIDATION_ERROR',
             details,
-          });
+            timestamp: new Date().toISOString(),
+          };
+          return reply.status(400).send(errorResponse);
         }
 
         const { reviews } = validationResult.data;
@@ -79,11 +80,14 @@ describe('API Endpoints Integration Tests', () => {
         };
       } catch (error) {
         fastify.log.error(error);
-        return reply.status(500).send({
+        const errorResponse: ErrorResponse = {
+          statusCode: 500,
           error: 'SERVICE_ERROR',
           details:
             'Internal server error occurred while processing the request',
-        });
+          timestamp: new Date().toISOString(),
+        };
+        return reply.status(500).send(errorResponse);
       }
     });
 
@@ -177,7 +181,9 @@ describe('API Endpoints Integration Tests', () => {
 
       const data = JSON.parse(response.payload) as ErrorResponse;
       expect(data.error).toBe('VALIDATION_ERROR');
+      expect(data.statusCode).toBe(400);
       expect(data.details).toContain('reviews');
+      expect(data.timestamp).toBeDefined();
       expect(mockCheckReview).not.toHaveBeenCalled();
     });
 
@@ -194,7 +200,9 @@ describe('API Endpoints Integration Tests', () => {
 
       const data = JSON.parse(response.payload) as ErrorResponse;
       expect(data.error).toBe('VALIDATION_ERROR');
+      expect(data.statusCode).toBe(400);
       expect(data.details).toContain('Array must contain at least 1 element');
+      expect(data.timestamp).toBeDefined();
       expect(mockCheckReview).not.toHaveBeenCalled();
     });
 
@@ -223,6 +231,11 @@ describe('API Endpoints Integration Tests', () => {
 
       const data = JSON.parse(response.payload) as ErrorResponse;
       expect(data.error).toBe('SERVICE_ERROR');
+      expect(data.statusCode).toBe(500);
+      expect(data.details).toBe(
+        'Internal server error occurred while processing the request'
+      );
+      expect(data.timestamp).toBeDefined();
 
       expect(mockCheckReview).toHaveBeenCalledWith(
         expect.stringContaining('Test review'),
