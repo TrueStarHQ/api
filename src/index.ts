@@ -138,7 +138,7 @@ fastify.post<{
     const result = await checkReview(combinedReviewText, request.log);
 
     return {
-      result: result,
+      result,
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
