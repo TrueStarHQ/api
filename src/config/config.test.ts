@@ -1,28 +1,28 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getConfig, resetConfigForTests } from './config.js';
 
 describe('Config', () => {
-  const originalEnv = process.env;
-
   beforeEach(() => {
     resetConfigForTests();
-    process.env = { ...originalEnv };
   });
 
   afterEach(() => {
-    process.env = originalEnv;
+    vi.unstubAllEnvs();
+    resetConfigForTests();
   });
 
   describe('getConfig', () => {
     it('validates with custom values for optional environment variables', () => {
-      process.env = {
-        OPENAI_API_KEY: 'some-api-key',
-        PORT: '99999',
-        HOST: 'fake-host',
-        NODE_ENV: 'test',
-        OPENAI_MODEL: 'fake-model',
-        ALLOWED_ORIGINS: 'https://fake-domain1.com,https://fake-domain2.com',
-      };
+      vi.stubEnv('OPENAI_API_KEY', 'some-api-key');
+      vi.stubEnv('PORT', '99999');
+      vi.stubEnv('HOST', 'fake-host');
+      vi.stubEnv('NODE_ENV', 'test');
+      vi.stubEnv('OPENAI_MODEL', 'fake-model');
+      vi.stubEnv(
+        'ALLOWED_ORIGINS',
+        'https://fake-domain1.com,https://fake-domain2.com'
+      );
+      resetConfigForTests();
 
       const config = getConfig();
 
@@ -47,22 +47,27 @@ describe('Config', () => {
     });
 
     it('throws error when OPENAI_API_KEY is missing', () => {
-      process.env = {};
+      vi.stubEnv('OPENAI_API_KEY', '');
+      delete process.env.OPENAI_API_KEY;
+      resetConfigForTests();
       expect(() => getConfig()).toThrow();
     });
 
     it('throws error when OPENAI_API_KEY is empty', () => {
-      process.env.OPENAI_API_KEY = '';
+      vi.stubEnv('OPENAI_API_KEY', '');
+      resetConfigForTests();
       expect(() => getConfig()).toThrow('OpenAI API key is required');
     });
 
     it('throws error when PORT is not a number', () => {
-      process.env.PORT = 'not-a-number';
+      vi.stubEnv('PORT', 'not-a-number');
+      resetConfigForTests();
       expect(() => getConfig()).toThrow('Expected number, received nan');
     });
 
     it('throws error when NODE_ENV is invalid', () => {
-      process.env.NODE_ENV = 'invalid-env';
+      vi.stubEnv('NODE_ENV', 'invalid-env');
+      resetConfigForTests();
       expect(() => getConfig()).toThrow('Invalid enum value');
     });
 
@@ -72,7 +77,8 @@ describe('Config', () => {
     });
 
     it('throws error when OPENAI_API_KEY is missing in non-test environments', () => {
-      process.env.NODE_ENV = 'production';
+      vi.stubEnv('NODE_ENV', 'production');
+      vi.stubEnv('OPENAI_API_KEY', '');
       delete process.env.OPENAI_API_KEY;
       resetConfigForTests();
 

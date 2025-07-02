@@ -41,7 +41,6 @@ const ConfigSchema = z.object({
 
 let validatedConfig: Config | null = null;
 
-// Test utility to reset cached config between test cases
 export function resetConfigForTests(): void {
   if (!process.env.VITEST) {
     throw new Error(
