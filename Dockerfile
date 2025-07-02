@@ -8,6 +8,7 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 COPY . .
+RUN corepack enable
 RUN yarn install --frozen-lockfile
 RUN yarn build
 
@@ -25,6 +26,7 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 # --ignore-scripts prevents postinstall scripts from running (they're dev-only)
+RUN corepack enable
 RUN yarn install --frozen-lockfile --production --ignore-scripts
 RUN yarn cache clean
 
