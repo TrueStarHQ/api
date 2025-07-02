@@ -6,9 +6,9 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock openapi.yaml orval.config.cjs ./
 RUN corepack enable
-RUN yarn install --frozen-lockfile
+RUN yarn install --immutable
 
 COPY . .
 RUN yarn build
@@ -31,7 +31,6 @@ RUN corepack enable && \
     yarn cache clean
 
 COPY --from=builder /app/dist ./dist
-COPY openapi.yaml ./
 
 RUN chown -R nodejs:nodejs /app
 USER nodejs
