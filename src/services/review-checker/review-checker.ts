@@ -4,7 +4,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 import { ReviewChecker, ReviewFlag } from '../../types/generated/index.js';
 import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
 import { getConfig } from '../../config/environment.js';
-import { logger } from '../../lib/logger.js';
+import { logger } from '../../utils/logger.js';
 
 // Get flag values from the generated ReviewFlag constant
 const reviewFlagValues = Object.values(ReviewFlag) as [string, ...string[]];

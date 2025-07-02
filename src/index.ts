@@ -1,7 +1,6 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import type { FastifyRequest, FastifyServerOptions } from 'fastify';
 import { checkReview } from './services/review-checker/index.js';
 import {
   CheckAmazonReviewsRequest,
@@ -12,6 +11,7 @@ import {
 import { checkAmazonReviewsBody } from './types/generated/zod.js';
 import { validateEnvironment, getConfig } from './config/environment.js';
 import { errorHandlingPlugin } from './plugins/error-handling.js';
+import { logger } from './utils/logger.js';
 
 // Extend Fastify request type to include startTime
 declare module 'fastify' {
@@ -20,33 +20,8 @@ declare module 'fastify' {
   }
 }
 
-function getLoggerConfig(): FastifyServerOptions['logger'] {
-  if (process.env.NODE_ENV === 'production') {
-    return {
-      level: 'info',
-      serializers: {
-        req: (req: FastifyRequest) => ({
-          method: req.method,
-          url: req.url,
-          headers: {
-            'user-agent': req.headers['user-agent'],
-            'x-forwarded-for': req.headers['x-forwarded-for'],
-          },
-        }),
-        res: (res: { statusCode: number }) => ({
-          statusCode: res.statusCode,
-        }),
-      },
-    };
-  }
-
-  return {
-    transport: { target: 'pino-pretty' },
-  };
-}
-
 const fastify = Fastify({
-  logger: getLoggerConfig(),
+  logger: logger,
 });
 
 await fastify.register(errorHandlingPlugin);
@@ -135,7 +110,7 @@ fastify.post<{
       )
       .join('\n\n---\n\n');
 
-    const result = await checkReview(combinedReviewText, request.log);
+    const result = await checkReview(combinedReviewText);
 
     return {
       result,

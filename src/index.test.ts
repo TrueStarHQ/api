@@ -72,7 +72,7 @@ describe('API Endpoints Integration Tests', () => {
           )
           .join('\n\n---\n\n');
 
-        const result = await checkReview(combinedReviewText, request.log);
+        const result = await checkReview(combinedReviewText);
 
         return {
           result: result,
@@ -165,8 +165,7 @@ describe('API Endpoints Integration Tests', () => {
 
       // Verify the service was called with correct parameters
       expect(mockCheckReview).toHaveBeenCalledWith(
-        expect.stringContaining('Best product ever'),
-        expect.any(Object) // Fastify logger
+        expect.stringContaining('Best product ever')
       );
     });
 
@@ -238,8 +237,7 @@ describe('API Endpoints Integration Tests', () => {
       expect(data.timestamp).toBeDefined();
 
       expect(mockCheckReview).toHaveBeenCalledWith(
-        expect.stringContaining('Test review'),
-        expect.any(Object) // logger
+        expect.stringContaining('Test review')
       );
     });
   });
