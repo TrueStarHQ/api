@@ -27,7 +27,7 @@ WORKDIR /app
 
 COPY package.json yarn.lock ./
 RUN corepack enable && \
-    yarn install --frozen-lockfile --production --ignore-scripts && \
+    yarn install --immutable --mode skip-build && \
     yarn cache clean
 
 COPY --from=builder /app/dist ./dist
