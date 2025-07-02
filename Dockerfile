@@ -8,7 +8,6 @@ WORKDIR /app
 
 COPY package.json yarn.lock .yarnrc.yml openapi.yaml orval.config.cjs ./
 COPY .yarn/releases ./.yarn/releases
-RUN corepack enable
 RUN yarn install --immutable
 
 COPY . .
@@ -28,8 +27,7 @@ WORKDIR /app
 
 COPY package.json yarn.lock .yarnrc.yml ./
 COPY .yarn/releases ./.yarn/releases
-RUN corepack enable && \
-    yarn install --immutable --mode skip-build && \
+RUN yarn install --immutable --mode skip-build && \
     yarn cache clean
 
 COPY --from=builder /app/dist ./dist
