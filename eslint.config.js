@@ -1,16 +1,21 @@
 import js from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
 export default [
+  {
+    ignores: ['dist', 'node_modules', 'src/types/generated'],
+  },
   js.configs.recommended,
   {
-    files: ['**/*.{js,ts}'],
+    files: ['src/**/*.ts'],
     languageOptions: {
-      parser: tsparser,
+      parser: tsParser,
+      ecmaVersion: 'latest',
+      sourceType: 'module',
       parserOptions: {
-        ecmaVersion: 'latest',
-        sourceType: 'module',
+        project: './tsconfig.json',
       },
       globals: {
         process: 'readonly',
@@ -18,10 +23,11 @@ export default [
       },
     },
     plugins: {
-      '@typescript-eslint': tseslint,
+      '@typescript-eslint': typescriptEslint,
+      'simple-import-sort': simpleImportSort,
     },
     rules: {
-      ...tseslint.configs.recommended.rules,
+      ...typescriptEslint.configs.recommended.rules,
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
@@ -30,9 +36,8 @@ export default [
         },
       ],
       'no-console': 'warn',
+      'simple-import-sort/imports': 'error',
+      'simple-import-sort/exports': 'error',
     },
-  },
-  {
-    ignores: ['dist/', 'node_modules/', 'src/types/generated/'],
   },
 ];
