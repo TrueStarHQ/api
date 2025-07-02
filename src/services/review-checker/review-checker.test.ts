@@ -1,18 +1,32 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { checkReview } from './review-checker.js';
+
+// Store mock function references
+const mockCreate = vi.fn();
 
 vi.mock('openai', () => ({
   default: vi.fn().mockImplementation(() => ({
     chat: {
       completions: {
-        create: vi.fn(),
+        create: mockCreate,
       },
     },
   })),
 }));
 
+vi.mock('../../config/environment.js', () => ({
+  getConfig: () => ({
+    OPENAI_API_KEY: 'test-key',
+    OPENAI_MODEL: 'gpt-4o',
+  }),
+}));
+
 describe('Review checker service', () => {
-  it('should return check result for a review', async () => {
+  beforeEach(() => {
+    mockCreate.mockClear();
+  });
+
+  it('parses OpenAI JSON response into ReviewChecker format', async () => {
     const mockResponse = {
       isFake: true,
       confidence: 0.85,
@@ -21,8 +35,7 @@ describe('Review checker service', () => {
       summary: 'Review appears to be fake based on generic praise',
     };
 
-    const OpenAI = (await import('openai')).default;
-    const mockCreate = vi.fn().mockResolvedValue({
+    mockCreate.mockResolvedValue({
       choices: [
         {
           message: {
@@ -32,25 +45,13 @@ describe('Review checker service', () => {
       ],
     });
 
-    const mockOpenAI = new OpenAI({ apiKey: 'fake-api-key' });
-    mockOpenAI.chat.completions.create = mockCreate;
-
     const result = await checkReview('This product is amazing!');
 
-    expect(result).toBeDefined();
-    expect(typeof result.isFake).toBe('boolean');
-    expect(typeof result.confidence).toBe('number');
-    expect(Array.isArray(result.reasons)).toBe(true);
-    expect(Array.isArray(result.flags)).toBe(true);
-    expect(typeof result.summary).toBe('string');
+    expect(result).toEqual(mockResponse);
   });
 
-  it('should handle OpenAI API errors gracefully', async () => {
-    const OpenAI = (await import('openai')).default;
-    const mockCreate = vi.fn().mockRejectedValue(new Error('API Error'));
-
-    const mockOpenAI = new OpenAI({ apiKey: 'fake-api-key' });
-    mockOpenAI.chat.completions.create = mockCreate;
+  it('returns safe fallback response when OpenAI API fails', async () => {
+    mockCreate.mockRejectedValue(new Error('API Error'));
 
     const result = await checkReview('Test review');
 

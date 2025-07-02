@@ -6,10 +6,87 @@ import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
 import { getConfig } from '../../config/environment.js';
 import { logger } from '../../utils/logger.js';
 
-// Get flag values from the generated ReviewFlag constant
+export async function checkReview(reviewText: string): Promise<ReviewChecker> {
+  try {
+    const responseContent = await callOpenAI(reviewText);
+    return parseAnalysisResponse(responseContent);
+  } catch (error) {
+    logger.error({ err: error }, 'Error analyzing review');
+    return createFallbackResponse();
+  }
+}
+
+async function callOpenAI(reviewText: string): Promise<string> {
+  const openaiClient = getOpenAIClient();
+  const request = createCompletionRequest(reviewText);
+
+  const completion = (await openaiClient.chat.completions.create(
+    request
+  )) as OpenAI.Chat.ChatCompletion;
+  return extractResponseContent(completion);
+}
+
+function getOpenAIClient(): OpenAI {
+  if (!openai) {
+    const config = getConfig();
+    openai = new OpenAI({
+      apiKey: config.OPENAI_API_KEY,
+    });
+  }
+  return openai;
+}
+
+function createCompletionRequest(reviewText: string) {
+  const config = getConfig();
+
+  return {
+    model: config.OPENAI_MODEL,
+    messages: [
+      { role: 'system' as const, content: SYSTEM_REVIEW_CHECKER_PROMPT },
+      { role: 'user' as const, content: userReviewPrompt(reviewText) },
+    ],
+    response_format: {
+      type: 'json_schema' as const,
+      json_schema: {
+        name: 'ReviewAnalysis',
+        schema: reviewCheckerJsonSchema,
+        strict: true,
+      },
+    },
+    temperature: 0.3,
+  };
+}
+
+function extractResponseContent(
+  completion: OpenAI.Chat.ChatCompletion
+): string {
+  const content = completion.choices[0]?.message?.content;
+  if (!content) {
+    throw new Error('No response from OpenAI');
+  }
+  return content;
+}
+
+function parseAnalysisResponse(responseContent: string): ReviewChecker {
+  const rawAnalysis = JSON.parse(responseContent);
+  logger.debug({ rawAnalysis }, 'Raw OpenAI response');
+
+  const analysis = ReviewCheckerSchema.parse(rawAnalysis);
+  return analysis as ReviewChecker;
+}
+
+function createFallbackResponse(): ReviewChecker {
+  return {
+    isFake: false,
+    confidence: 0,
+    reasons: ['Analysis failed - unable to determine authenticity'],
+    flags: [] as ReviewFlag[],
+    summary: 'Could not analyze review due to service error',
+  };
+}
+
 const reviewFlagValues = Object.values(ReviewFlag) as [string, ...string[]];
 
-// Zod schema for the OpenAI response
 const ReviewCheckerSchema = z.object({
   isFake: z.boolean(),
   confidence: z.number().min(0).max(1),
@@ -24,64 +101,3 @@ const reviewCheckerJsonSchema = zodToJsonSchema(ReviewCheckerSchema, {
 });
 
 let openai: OpenAI;
-
-function getOpenAIClient(): OpenAI {
-  if (!openai) {
-    const config = getConfig();
-    openai = new OpenAI({
-      apiKey: config.OPENAI_API_KEY,
-    });
-  }
-  return openai;
-}
-
-export async function checkReview(reviewText: string): Promise<ReviewChecker> {
-  const systemPrompt = SYSTEM_REVIEW_CHECKER_PROMPT;
-  const userPrompt = userReviewPrompt(reviewText);
-
-  try {
-    const config = getConfig();
-    const openaiClient = getOpenAIClient();
-
-    const completion = await openaiClient.chat.completions.create({
-      model: config.OPENAI_MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt },
-      ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: {
-          name: 'ReviewAnalysis',
-          schema: reviewCheckerJsonSchema,
-          strict: true,
-        },
-      } as const,
-      temperature: 0.3,
-    });
-
-    const response = completion.choices[0]?.message?.content;
-    if (!response) {
-      throw new Error('No response from OpenAI');
-    }
-
-    const rawAnalysis = JSON.parse(response);
-
-    // Log the raw response for debugging
-    logger.debug({ rawAnalysis }, 'Raw OpenAI response');
-
-    const analysis = ReviewCheckerSchema.parse(rawAnalysis);
-    return analysis as ReviewChecker;
-  } catch (error) {
-    logger.error({ err: error }, 'Error analyzing review');
-
-    // Return a fallback analysis if OpenAI fails
-    return {
-      isFake: false,
-      confidence: 0,
-      reasons: ['Analysis failed - unable to determine authenticity'],
-      flags: [] as ReviewFlag[],
-      summary: 'Could not analyze review due to service error',
-    };
-  }
-}
