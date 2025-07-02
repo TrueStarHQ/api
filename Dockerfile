@@ -26,7 +26,8 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn/releases ./.yarn/releases
 RUN corepack enable && \
     yarn install --immutable --mode skip-build && \
     yarn cache clean
