@@ -1,4 +1,5 @@
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
+
 import type { HealthResponse } from '../types/generated/index.js';
 
 export async function healthHandler(

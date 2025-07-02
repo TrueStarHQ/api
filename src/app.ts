@@ -1,11 +1,12 @@
+import type { FastifyCorsOptions } from '@fastify/cors';
 import cors from '@fastify/cors';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import Fastify from 'fastify';
+
 import { getConfig } from './config/config.js';
 import { checkAmazonReviewsHandler, healthHandler } from './handlers/index.js';
 import { errorHandler } from './plugins/error-handler.js';
 import { logger } from './utils/logger.js';
-import type { FastifyCorsOptions } from '@fastify/cors';
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 declare module 'fastify' {
   interface FastifyRequest {

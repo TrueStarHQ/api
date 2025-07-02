@@ -1,6 +1,7 @@
+import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { Logger, LoggerOptions } from 'pino';
 import pino from 'pino';
-import type { LoggerOptions, Logger } from 'pino';
-import type { FastifyRequest, FastifyReply } from 'fastify';
+
 import { getConfig } from '../config/config.js';
 
 export const logger: Logger =

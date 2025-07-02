@@ -1,6 +1,7 @@
 import 'dotenv/config';
-import { getConfig } from './config/config.js';
+
 import { createApp } from './app.js';
+import { getConfig } from './config/config.js';
 
 const startServer = async () => {
   try {

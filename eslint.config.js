@@ -14,9 +14,6 @@ export default [
       parser: tsParser,
       ecmaVersion: 'latest',
       sourceType: 'module',
-      parserOptions: {
-        project: './tsconfig.json',
-      },
       globals: {
         process: 'readonly',
         console: 'readonly',

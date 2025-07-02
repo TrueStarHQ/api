@@ -1,6 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createApp } from './app.js';
 import { FastifyInstance } from 'fastify';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { createApp } from './app.js';
 
 // Mock the handlers to avoid testing their implementation
 vi.mock('./handlers/index.js', () => ({

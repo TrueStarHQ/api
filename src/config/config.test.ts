@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { getConfig, resetConfigForTests } from './config.js';
 
 describe('Config', () => {

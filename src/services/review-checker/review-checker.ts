@@ -1,10 +1,11 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
-import { ReviewChecker, ReviewFlag } from '../../types/generated/index.js';
-import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
+
 import { getConfig } from '../../config/config.js';
+import { ReviewChecker, ReviewFlag } from '../../types/generated/index.js';
 import { logger } from '../../utils/logger.js';
+import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
 
 export async function checkReview(reviewText: string): Promise<ReviewChecker> {
   try {

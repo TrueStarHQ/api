@@ -1,12 +1,13 @@
-import { getConfig } from '../config/config.js';
 import type {
-  FastifyInstance,
   FastifyError,
-  FastifyRequest,
+  FastifyInstance,
   FastifyReply,
+  FastifyRequest,
 } from 'fastify';
-import type { ErrorResponse } from '../types/generated/index.js';
 import { FastifySchemaValidationError } from 'fastify/types/schema.js';
+
+import { getConfig } from '../config/config.js';
+import type { ErrorResponse } from '../types/generated/index.js';
 
 export async function errorHandler(fastify: FastifyInstance) {
   fastify.setErrorHandler(handleError);

@@ -1,10 +1,11 @@
 import createError from '@fastify/error';
-import Fastify from 'fastify';
-import { beforeEach, describe, expect, it, vi, afterEach } from 'vitest';
-import { resetConfigForTests } from '../config/config.js';
-import { errorHandler } from './error-handler.js';
 import type { FastifyError, FastifyInstance } from 'fastify';
+import Fastify from 'fastify';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { resetConfigForTests } from '../config/config.js';
 import type { ErrorResponse } from '../types/generated/index.js';
+import { errorHandler } from './error-handler.js';
 
 describe('errorHandler plugin', () => {
   let fastify: FastifyInstance;

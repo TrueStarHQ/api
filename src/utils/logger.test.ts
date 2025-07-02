@@ -1,6 +1,7 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { logger, createLogger } from './logger.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { resetConfigForTests } from '../config/config.js';
+import { createLogger, logger } from './logger.js';
 
 describe('Logger', () => {
   describe('exported instance', () => {

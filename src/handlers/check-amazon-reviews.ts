@@ -1,4 +1,5 @@
-import type { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyReply, FastifyRequest } from 'fastify';
+
 import { checkReview } from '../services/review-checker/review-checker.js';
 import type { CheckAmazonReviewsRequest } from '../types/generated/index.js';
 import { checkAmazonReviewsBody } from '../types/generated/zod.js';
