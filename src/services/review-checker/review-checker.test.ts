@@ -14,13 +14,6 @@ vi.mock('openai', () => ({
   })),
 }));
 
-vi.mock('../../config/environment.js', () => ({
-  getConfig: () => ({
-    OPENAI_API_KEY: 'test-key',
-    OPENAI_MODEL: 'gpt-4o',
-  }),
-}));
-
 describe('Review checker service', () => {
   beforeEach(() => {
     mockCreate.mockClear();

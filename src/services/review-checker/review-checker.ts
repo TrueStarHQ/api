@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { ReviewChecker, ReviewFlag } from '../../types/generated/index.js';
 import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
-import { getConfig } from '../../config/environment.js';
+import { getConfig } from '../../config/config.js';
 import { logger } from '../../utils/logger.js';
 
 export async function checkReview(reviewText: string): Promise<ReviewChecker> {

@@ -1,9 +1,10 @@
 import pino from 'pino';
 import type { LoggerOptions, Logger } from 'pino';
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { getConfig } from '../config/config.js';
 
-export const logger =
-  process.env.NODE_ENV === 'test' ? createNoOpLogger() : createLogger();
+export const logger: Logger =
+  getConfig().NODE_ENV === 'test' ? createNoOpLogger() : createLogger();
 
 export function createLogger(options?: LoggerOptions): Logger {
   const defaultOptions = getPinoOptions();
@@ -11,12 +12,7 @@ export function createLogger(options?: LoggerOptions): Logger {
   return pino(finalOptions);
 }
 
-export const createChildLogger = (
-  parentLogger: Logger,
-  bindings: Record<string, unknown>
-): Logger => parentLogger.child(bindings);
-
-const getLogLevel = () => process.env.LOG_LEVEL || 'debug';
+const getLogLevel = () => getConfig().LOG_LEVEL;
 
 const SENSITIVE_PATHS = [
   'apiKey',
@@ -24,11 +20,9 @@ const SENSITIVE_PATHS = [
   'token',
   'authorization',
   'cookie',
-  // Nested
   '*.apiKey',
   '*.password',
   '*.token',
-  // Headers
   'headers.authorization',
   'headers.cookie',
 ];
@@ -59,7 +53,7 @@ const getPinoOptions = (): LoggerOptions => {
     },
   };
 
-  if (process.env.NODE_ENV === 'development') {
+  if (getConfig().NODE_ENV === 'development') {
     return {
       ...baseOptions,
       transport: {

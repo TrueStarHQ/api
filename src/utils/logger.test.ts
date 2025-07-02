@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { logger, createLogger, createChildLogger } from './logger.js';
+import { logger, createLogger } from './logger.js';
 
 describe('Logger', () => {
   describe('exported logger instance', () => {
@@ -94,7 +94,11 @@ describe('Logger', () => {
       });
     });
 
-    it('respects LOG_LEVEL environment variable over defaults', () => {
+    it('respects LOG_LEVEL environment variable over defaults', async () => {
+      // Import resetConfigForTests to clear cached config
+      const { resetConfigForTests } = await import('../config/config.js');
+      resetConfigForTests();
+
       vi.stubEnv('NODE_ENV', 'production');
       vi.stubEnv('LOG_LEVEL', 'warn');
 
@@ -102,23 +106,7 @@ describe('Logger', () => {
       expect(customLogger.level).toBe('warn');
 
       vi.unstubAllEnvs();
-    });
-  });
-
-  describe('createChildLogger()', () => {
-    it('creates child logger with additional context fields', () => {
-      vi.stubEnv('NODE_ENV', 'development');
-
-      const parentLogger = createLogger();
-      const childLogger = createChildLogger(parentLogger, {
-        service: 'review-checker',
-        requestId: 'abc-123',
-      });
-
-      expect(childLogger).toBeDefined();
-      expect(childLogger).not.toBe(parentLogger);
-
-      vi.unstubAllEnvs();
+      resetConfigForTests(); // Clean up after test
     });
   });
 });
