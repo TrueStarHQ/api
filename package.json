@@ -13,8 +13,10 @@
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest",
-    "test:ci": "vitest --run",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ci": "vitest run",
     "codegen": "orval --config orval.config.cjs",
     "postinstall": "yarn codegen",
     "prepare": "husky"
