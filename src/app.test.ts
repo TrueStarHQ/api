@@ -42,7 +42,6 @@ describe('App integration tests', () => {
       const response = await fastify.inject({
         method: 'POST',
         url: '/check/amazon/reviews',
-        payload: {}, // Payload doesn't matter for routing test
       });
 
       expect(response.statusCode).not.toBe(404);

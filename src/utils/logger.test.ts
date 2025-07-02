@@ -1,8 +1,9 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { logger, createLogger } from './logger.js';
+import { resetConfigForTests } from '../config/config.js';
 
 describe('Logger', () => {
-  describe('exported logger instance', () => {
+  describe('exported instance', () => {
     it('provides all standard logging methods', () => {
       expect(logger.info).toBeDefined();
       expect(logger.error).toBeDefined();
@@ -95,8 +96,6 @@ describe('Logger', () => {
     });
 
     it('respects LOG_LEVEL environment variable over defaults', async () => {
-      // Import resetConfigForTests to clear cached config
-      const { resetConfigForTests } = await import('../config/config.js');
       resetConfigForTests();
 
       vi.stubEnv('NODE_ENV', 'production');
