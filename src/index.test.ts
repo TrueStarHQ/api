@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
-import { checkReview } from './services/review-checker/index.js';
+import { checkReview } from './services/review-checker/review-checker.js';
 import {
   CheckAmazonReviewsRequest,
   CheckAmazonReviewsResponse,
@@ -11,7 +11,7 @@ import {
 import { checkAmazonReviewsBody } from './types/generated/zod.js';
 import { errorHandlingPlugin } from './plugins/error-handling.js';
 
-vi.mock('./services/review-checker/index.js', () => ({
+vi.mock('./services/review-checker/review-checker.js', () => ({
   checkReview: vi.fn(),
 }));
 

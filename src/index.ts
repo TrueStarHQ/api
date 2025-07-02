@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { checkReview } from './services/review-checker/index.js';
+import { checkReview } from './services/review-checker/review-checker.js';
 import {
   CheckAmazonReviewsRequest,
   CheckAmazonReviewsResponse,
