@@ -7,9 +7,10 @@ RUN apk add --no-cache python3 make g++
 WORKDIR /app
 
 COPY package.json yarn.lock ./
-COPY . .
 RUN corepack enable
 RUN yarn install --frozen-lockfile
+
+COPY . .
 RUN yarn build
 
 # ===== PRODUCTION STAGE =====
@@ -25,20 +26,17 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 
 COPY package.json yarn.lock ./
-# --ignore-scripts prevents postinstall scripts from running (they're dev-only)
-RUN corepack enable
-RUN yarn install --frozen-lockfile --production --ignore-scripts
-RUN yarn cache clean
+RUN corepack enable && \
+    yarn install --frozen-lockfile --production --ignore-scripts && \
+    yarn cache clean
 
 COPY --from=builder /app/dist ./dist
 COPY openapi.yaml ./
 
 RUN chown -R nodejs:nodejs /app
-
 USER nodejs
 
 EXPOSE 8080
-
 ENV NODE_ENV=production
 
 ENTRYPOINT ["dumb-init", "--"]
