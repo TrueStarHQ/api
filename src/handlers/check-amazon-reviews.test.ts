@@ -6,7 +6,6 @@ import {
   createMockReply,
 } from '../../test/fastify-mocks.js';
 
-// Mock the service
 vi.mock('../services/review-checker/review-checker.js', () => ({
   checkReview: vi.fn(),
 }));
@@ -25,7 +24,6 @@ describe('checkAmazonReviewsHandler', () => {
       const mockRequest = createMockRequest<CheckAmazonReviewsRequest>({
         body: {} as CheckAmazonReviewsRequest,
       });
-
       const mockReply = createMockReply();
 
       await checkAmazonReviewsHandler(mockRequest, mockReply);
@@ -42,7 +40,6 @@ describe('checkAmazonReviewsHandler', () => {
       const mockRequest = createMockRequest<CheckAmazonReviewsRequest>({
         body: { reviews: [] },
       });
-
       const mockReply = createMockReply();
 
       await checkAmazonReviewsHandler(mockRequest, mockReply);
@@ -71,7 +68,6 @@ describe('checkAmazonReviewsHandler', () => {
           ],
         },
       });
-
       const mockReply = createMockReply();
 
       await checkAmazonReviewsHandler(mockRequest, mockReply);
@@ -84,14 +80,68 @@ describe('checkAmazonReviewsHandler', () => {
       });
     });
 
-    it('returns 400 when required fields are missing', async () => {
+    it('returns 400 when rating is 0', async () => {
+      const mockRequest = createMockRequest<CheckAmazonReviewsRequest>({
+        body: {
+          reviews: [
+            {
+              id: 'test-1',
+              rating: 0,
+              text: 'Bad',
+              author: 'User',
+              verified: true,
+            },
+          ],
+        },
+      });
+      const mockReply = createMockReply();
+
+      await checkAmazonReviewsHandler(mockRequest, mockReply);
+
+      expect(mockReply.sendError).toHaveBeenCalledWith({
+        statusCode: 400,
+        error: 'VALIDATION_ERROR',
+        details: expect.stringContaining('rating'),
+        timestamp: expect.any(String),
+      });
+    });
+
+    it('returns 400 when rating is negative', async () => {
+      const mockRequest = createMockRequest<CheckAmazonReviewsRequest>({
+        body: {
+          reviews: [
+            {
+              id: 'test-1',
+              rating: -1,
+              text: 'Invalid',
+              author: 'User',
+              verified: true,
+            },
+          ],
+        },
+      });
+      const mockReply = createMockReply();
+
+      await checkAmazonReviewsHandler(mockRequest, mockReply);
+
+      expect(mockReply.sendError).toHaveBeenCalledWith({
+        statusCode: 400,
+        error: 'VALIDATION_ERROR',
+        details: expect.stringContaining('rating'),
+        timestamp: expect.any(String),
+      });
+    });
+
+    it('returns 400 when text field is missing', async () => {
       const mockRequest = createMockRequest<CheckAmazonReviewsRequest>({
         body: {
           reviews: [
             {
               id: 'test-1',
               rating: 4,
-              // missing text, author, verified
+              author: 'User',
+              verified: true,
+              // missing "text" field
             },
           ],
         } as CheckAmazonReviewsRequest,
@@ -104,7 +154,61 @@ describe('checkAmazonReviewsHandler', () => {
       expect(mockReply.sendError).toHaveBeenCalledWith({
         statusCode: 400,
         error: 'VALIDATION_ERROR',
-        details: expect.any(String),
+        details: expect.stringContaining('text'),
+        timestamp: expect.any(String),
+      });
+    });
+
+    it('returns 400 when author field is missing', async () => {
+      const mockRequest = createMockRequest<CheckAmazonReviewsRequest>({
+        body: {
+          reviews: [
+            {
+              id: 'test-1',
+              rating: 4,
+              text: 'Great product',
+              verified: true,
+              // missing "author" field
+            },
+          ],
+        } as CheckAmazonReviewsRequest,
+      });
+
+      const mockReply = createMockReply();
+
+      await checkAmazonReviewsHandler(mockRequest, mockReply);
+
+      expect(mockReply.sendError).toHaveBeenCalledWith({
+        statusCode: 400,
+        error: 'VALIDATION_ERROR',
+        details: expect.stringContaining('author'),
+        timestamp: expect.any(String),
+      });
+    });
+
+    it('returns 400 when verified field is missing', async () => {
+      const mockRequest = createMockRequest<CheckAmazonReviewsRequest>({
+        body: {
+          reviews: [
+            {
+              id: 'test-1',
+              rating: 4,
+              text: 'Great product',
+              author: 'User',
+              // missing "verified" field
+            },
+          ],
+        } as CheckAmazonReviewsRequest,
+      });
+
+      const mockReply = createMockReply();
+
+      await checkAmazonReviewsHandler(mockRequest, mockReply);
+
+      expect(mockReply.sendError).toHaveBeenCalledWith({
+        statusCode: 400,
+        error: 'VALIDATION_ERROR',
+        details: expect.stringContaining('verified'),
         timestamp: expect.any(String),
       });
     });
@@ -112,13 +216,14 @@ describe('checkAmazonReviewsHandler', () => {
 
   describe('successful processing', () => {
     it('processes valid review data and returns result', async () => {
-      mockedCheckReview.mockResolvedValue({
+      const expectedResult = {
         isFake: false,
         confidence: 0.9,
         reasons: [],
         flags: [],
         summary: 'Review appears genuine',
-      });
+      };
+      mockedCheckReview.mockResolvedValue(expectedResult);
 
       const mockRequest = createMockRequest<CheckAmazonReviewsRequest>({
         body: {
@@ -133,7 +238,6 @@ describe('checkAmazonReviewsHandler', () => {
           ],
         },
       });
-
       const mockReply = createMockReply();
 
       const result = await checkAmazonReviewsHandler(mockRequest, mockReply);
@@ -142,13 +246,7 @@ describe('checkAmazonReviewsHandler', () => {
         expect.stringContaining('Rating: 5/5')
       );
       expect(result).toEqual({
-        result: {
-          isFake: false,
-          confidence: 0.9,
-          reasons: [],
-          flags: [],
-          summary: 'Review appears genuine',
-        },
+        result: expectedResult,
         timestamp: expect.any(String),
       });
       expect(mockReply.sendError).not.toHaveBeenCalled();
@@ -183,15 +281,26 @@ describe('checkAmazonReviewsHandler', () => {
           ],
         },
       });
-
       const mockReply = createMockReply();
 
       await checkAmazonReviewsHandler(mockRequest, mockReply);
 
+      const expectedFormat = [
+        'Rating: 5/5',
+        'Author: User1',
+        'Verified: Yes',
+        'Review: Great!',
+        '',
+        '---',
+        '',
+        'Rating: 3/5',
+        'Author: User2',
+        'Verified: No',
+        'Review: OK',
+      ].join('\n');
+
       expect(mockedCheckReview).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'Rating: 5/5\nAuthor: User1\nVerified: Yes\nReview: Great!\n\n---\n\nRating: 3/5\nAuthor: User2\nVerified: No\nReview: OK'
-        )
+        expect.stringContaining(expectedFormat)
       );
     });
   });
@@ -214,7 +323,6 @@ describe('checkAmazonReviewsHandler', () => {
           ],
         },
       });
-
       const mockReply = createMockReply();
 
       await checkAmazonReviewsHandler(mockRequest, mockReply);
