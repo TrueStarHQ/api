@@ -106,7 +106,7 @@ describe('Logger', () => {
       expect(customLogger.level).toBe('warn');
 
       vi.unstubAllEnvs();
-      resetConfigForTests(); // Clean up after test
+      resetConfigForTests();
     });
   });
 });
