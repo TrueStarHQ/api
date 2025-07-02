@@ -14,17 +14,17 @@ export function createLogger(options?: LoggerOptions): Logger {
 
 const getLogLevel = () => getConfig().LOG_LEVEL;
 
-const SENSITIVE_PATHS = [
+const SENSITIVE_FIELD_NAMES = [
   'apiKey',
-  'password',
-  'token',
   'authorization',
   'cookie',
-  '*.apiKey',
-  '*.password',
-  '*.token',
-  'headers.authorization',
-  'headers.cookie',
+  'password',
+  'token',
+];
+
+const SENSITIVE_PATHS = [
+  ...SENSITIVE_FIELD_NAMES,
+  ...SENSITIVE_FIELD_NAMES.map((fieldName) => `*.${fieldName}`),
 ];
 
 const serializers = {
