@@ -55,3 +55,7 @@ logs
 
 # Editor directories
 .husky
+
+# Yarn
+.yarn/*
+!.yarn/releases

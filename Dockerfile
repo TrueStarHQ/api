@@ -6,7 +6,8 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-COPY package.json yarn.lock openapi.yaml orval.config.cjs ./
+COPY package.json yarn.lock .yarnrc.yml openapi.yaml orval.config.cjs ./
+COPY .yarn/releases ./.yarn/releases
 RUN corepack enable
 RUN yarn install --immutable
 
