@@ -1,11 +1,11 @@
-import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import type { FastifyCorsOptions } from '@fastify/cors';
-import { errorHandlingPlugin } from './plugins/error-handling.js';
-import { logger } from './utils/logger.js';
+import Fastify from 'fastify';
 import { getConfig } from './config/config.js';
-import { healthHandler, checkAmazonReviewsHandler } from './handlers/index.js';
+import { checkAmazonReviewsHandler, healthHandler } from './handlers/index.js';
+import { errorHandler } from './plugins/error-handler.js';
+import { logger } from './utils/logger.js';
+import type { FastifyCorsOptions } from '@fastify/cors';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 declare module 'fastify' {
   interface FastifyRequest {
@@ -19,7 +19,7 @@ export async function createApp() {
     logger: config.NODE_ENV === 'test' ? false : logger,
   });
 
-  await errorHandlingPlugin(fastify);
+  await fastify.register(errorHandler);
   await fastify.register(cors, getCorsOptions(fastify));
   await setupRequestLogging(fastify);
   registerRoutes(fastify);
