@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { healthHandler } from './health.js';
 import {
-  createMockRequest,
   createMockReply,
+  createMockRequest,
 } from '../../test/fastify-mocks.js';
 
 describe('healthHandler', () => {

@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { checkAmazonReviewsHandler } from './check-amazon-reviews.js';
-import type { CheckAmazonReviewsRequest } from '../types/generated/index.js';
 import {
-  createMockRequest,
   createMockReply,
+  createMockRequest,
 } from '../../test/fastify-mocks.js';
+import type { CheckAmazonReviewsRequest } from '../types/generated/index.js';
 
 vi.mock('../services/review-checker/review-checker.js', () => ({
   checkReview: vi.fn(),
