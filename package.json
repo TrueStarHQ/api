@@ -1,7 +1,6 @@
 {
   "name": "@truestar/review-checker",
   "version": "0.1.0",
-  "type": "module",
   "main": "dist/index.js",
   "license": "Elastic-2.0",
   "scripts": {

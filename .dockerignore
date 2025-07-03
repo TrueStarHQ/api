@@ -30,6 +30,9 @@ coverage
 dist
 *.tsbuildinfo
 
+# Generated files
+src/types/generated
+
 # Documentation
 README.md
 docs
