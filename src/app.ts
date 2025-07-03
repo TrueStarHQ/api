@@ -1,6 +1,7 @@
 import type { FastifyCorsOptions } from '@fastify/cors';
 import cors from '@fastify/cors';
 import { fastifyRequestContext } from '@fastify/request-context';
+import fastifyStatic from '@fastify/static';
 import type {
   FastifyBaseLogger,
   FastifyInstance,
@@ -8,6 +9,7 @@ import type {
   FastifyRequest,
 } from 'fastify';
 import Fastify from 'fastify';
+import { join } from 'path';
 
 import { getConfig } from './config/config.js';
 import { checkAmazonReviewsHandler, healthHandler } from './handlers/index.js';
@@ -29,6 +31,11 @@ export async function createApp() {
   await fastify.register(fastifyRequestContext);
   await fastify.register(errorHandler);
   await fastify.register(cors, getCorsOptions(fastify));
+
+  await fastify.register(fastifyStatic, {
+    root: join(process.cwd(), 'public'),
+    prefix: '/',
+  });
 
   await setupRequestLogging(fastify);
   registerRoutes(fastify);

@@ -1,6 +1,6 @@
 module.exports = {
   zod: {
-    input: './openapi.yaml',
+    input: './public/openapi.yaml',
     output: {
       client: 'zod',
       target: './src/types/generated/zod.ts',

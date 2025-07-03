@@ -6,7 +6,8 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-COPY package.json yarn.lock .yarnrc.yml openapi.yaml orval.config.cjs ./
+COPY package.json yarn.lock .yarnrc.yml orval.config.cjs ./
+COPY public ./public/
 COPY .yarn/releases ./.yarn/releases
 RUN yarn install --immutable
 
@@ -31,6 +32,7 @@ RUN yarn install --immutable --mode skip-build && \
     yarn cache clean
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/public ./public
 
 RUN chown -R nodejs:nodejs /app
 USER nodejs
