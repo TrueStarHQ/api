@@ -4,7 +4,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { getConfig } from '../../config/config.js';
 import { ReviewChecker, ReviewFlag } from '../../types/generated/index.js';
-import { logger } from '../../utils/logger.js';
+import { log } from '../../utils/logger.js';
 import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
 
 export async function checkReview(reviewText: string): Promise<ReviewChecker> {
@@ -12,7 +12,7 @@ export async function checkReview(reviewText: string): Promise<ReviewChecker> {
     const responseContent = await callOpenAI(reviewText);
     return parseAnalysisResponse(responseContent);
   } catch (error) {
-    logger.error({ err: error }, 'Error analyzing review');
+    log.error({ err: error }, 'Error analyzing review');
     return createFallbackResponse();
   }
 }
@@ -70,7 +70,7 @@ function extractResponseContent(
 
 function parseAnalysisResponse(responseContent: string): ReviewChecker {
   const rawAnalysis = JSON.parse(responseContent);
-  logger.debug({ rawAnalysis }, 'Raw OpenAI response');
+  log.debug({ rawAnalysis }, 'Raw OpenAI response');
 
   const analysis = ReviewCheckerSchema.parse(rawAnalysis);
   return analysis as ReviewChecker;

@@ -1,19 +1,9 @@
-import type { FastifyReply, FastifyRequest } from 'fastify';
+import { requestContext } from '@fastify/request-context';
+import type { FastifyBaseLogger, FastifyReply, FastifyRequest } from 'fastify';
 import type { Logger, LoggerOptions } from 'pino';
-import pino from 'pino';
+import { pino } from 'pino';
 
 import { getConfig } from '../config/config.js';
-
-export const logger: Logger =
-  getConfig().NODE_ENV === 'test' ? createNoOpLogger() : createLogger();
-
-export function createLogger(options?: LoggerOptions): Logger {
-  const defaultOptions = getPinoOptions();
-  const finalOptions = { ...defaultOptions, ...options };
-  return pino(finalOptions);
-}
-
-const getLogLevel = () => getConfig().LOG_LEVEL;
 
 const SENSITIVE_FIELD_NAMES = [
   'apiKey',
@@ -43,9 +33,11 @@ const serializers = {
   err: pino.stdSerializers.err,
 };
 
-const getPinoOptions = (): LoggerOptions => {
+export function getPinoOptions(): LoggerOptions {
+  const config = getConfig();
+
   const baseOptions: LoggerOptions = {
-    level: getLogLevel(),
+    level: config.LOG_LEVEL,
     timestamp: pino.stdTimeFunctions.isoTime,
     serializers,
     redact: {
@@ -54,7 +46,7 @@ const getPinoOptions = (): LoggerOptions => {
     },
   };
 
-  if (getConfig().NODE_ENV === 'development') {
+  if (config.NODE_ENV === 'development') {
     return {
       ...baseOptions,
       transport: {
@@ -69,7 +61,7 @@ const getPinoOptions = (): LoggerOptions => {
   }
 
   return baseOptions;
-};
+}
 
 function createNoOpLogger(): Logger {
   const noop = () => {};
@@ -84,4 +76,31 @@ function createNoOpLogger(): Logger {
     trace: noop,
     child: () => createNoOpLogger(),
   } as unknown as Logger;
+}
+
+function createDefaultLogger(): Logger {
+  const isTest = getConfig().NODE_ENV === 'test';
+  return isTest ? createNoOpLogger() : pino(getPinoOptions());
+}
+
+const defaultLogger = createDefaultLogger();
+
+/**
+ * Main logger instance that automatically uses the correct logger based on context:
+ * - Inside a Fastify request: uses the request-scoped logger (with request ID, etc.)
+ * - Outside a Fastify request: uses the default application logger
+ *
+ * Usage: log.info('Hello world')
+ */
+export const log = new Proxy({} as Logger, {
+  get(_target, property, receiver) {
+    const currentLogger = requestContext.get('logger') ?? defaultLogger;
+    return Reflect.get(currentLogger, property, receiver);
+  },
+});
+
+declare module '@fastify/request-context' {
+  interface RequestContextData {
+    logger: FastifyBaseLogger;
+  }
 }

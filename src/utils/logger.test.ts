@@ -1,112 +1,65 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { requestContext } from '@fastify/request-context';
+import type { FastifyBaseLogger } from 'fastify';
+import { describe, expect, it, vi } from 'vitest';
 
-import { resetConfigForTests } from '../config/config.js';
-import { createLogger, logger } from './logger.js';
+import { log } from './logger.js';
+
+vi.mock('@fastify/request-context', () => ({
+  requestContext: {
+    get: vi.fn(),
+  },
+}));
 
 describe('Logger', () => {
   describe('exported instance', () => {
     it('provides all standard logging methods', () => {
-      expect(logger.info).toBeDefined();
-      expect(logger.error).toBeDefined();
-      expect(logger.warn).toBeDefined();
-      expect(logger.debug).toBeDefined();
+      expect(log.info).toBeDefined();
+      expect(log.error).toBeDefined();
+      expect(log.warn).toBeDefined();
+      expect(log.debug).toBeDefined();
     });
 
     describe('in test environment', () => {
       it('uses no-op functions that can be called safely', () => {
-        expect(process.env.NODE_ENV).toBe('test');
-        expect(logger.info.name).toBe('no-op');
-        expect(logger.error.name).toBe('no-op');
+        expect(log.info.name).toBe('no-op');
+        expect(log.error.name).toBe('no-op');
 
-        expect(() => logger.info('test')).not.toThrow();
-        expect(() => logger.error('test')).not.toThrow();
-        expect(() => logger.warn('test')).not.toThrow();
-        expect(() => logger.debug('test')).not.toThrow();
+        expect(() => log.info('test')).not.toThrow();
+        expect(() => log.error('test')).not.toThrow();
+        expect(() => log.warn('test')).not.toThrow();
+        expect(() => log.debug('test')).not.toThrow();
       });
 
       it('creates child loggers that are also no-op', () => {
-        const child = logger.child({ service: 'test' });
+        const child = log.child({ service: 'test' });
 
-        expect(child).not.toBe(logger);
+        expect(child).not.toBe(log);
         expect(child.info.name).toBe('no-op');
         expect(() => child.info('test')).not.toThrow();
       });
     });
-  });
 
-  describe('createLogger()', () => {
-    describe('in development environment', () => {
-      beforeEach(() => vi.stubEnv('NODE_ENV', 'development'));
-      afterEach(() => vi.unstubAllEnvs());
+    describe('request context integration', () => {
+      it('uses request-scoped logger when available', () => {
+        const mockRequestLogger = {
+          info: vi.fn(),
+        } as unknown as FastifyBaseLogger;
 
-      it('has standard Pino logger interface', () => {
-        const devLogger = createLogger();
+        vi.mocked(requestContext.get).mockReturnValue(mockRequestLogger);
 
-        expect(devLogger.level).toBeDefined();
-        expect(devLogger.child).toBeDefined();
-        expect(typeof devLogger.info).toBe('function');
-        expect(typeof devLogger.error).toBe('function');
+        log.info('test message');
+
+        expect(mockRequestLogger.info).toHaveBeenCalledWith('test message');
+        expect(requestContext.get).toHaveBeenCalledWith('logger');
       });
 
-      it('creates independent child loggers with context', () => {
-        const devLogger = createLogger();
-        const child = devLogger.child({ service: 'test' });
+      it('falls back to default logger when no request context', () => {
+        vi.mocked(requestContext.get).mockReturnValue(undefined);
 
-        expect(child).toBeDefined();
-        expect(child).not.toBe(devLogger);
-        expect(typeof child.info).toBe('function');
+        expect(() => log.info('test message')).not.toThrow();
+        expect(log.info.name).toBe('no-op');
+        expect(requestContext.get).toHaveBeenCalledWith('logger');
       });
-
-      it('defaults to debug log level for maximum visibility', () => {
-        const devLogger = createLogger();
-        expect(devLogger.level).toBe('debug');
-      });
-
-      it('respects custom log level', () => {
-        const customLogger = createLogger({ level: 'warn' });
-        expect(customLogger.level).toBe('warn');
-      });
-    });
-
-    describe('in production environment', () => {
-      beforeEach(() => vi.stubEnv('NODE_ENV', 'production'));
-      afterEach(() => vi.unstubAllEnvs());
-
-      it('has standard Pino logger interface', () => {
-        const prodLogger = createLogger();
-
-        expect(prodLogger.level).toBeDefined();
-        expect(prodLogger.child).toBeDefined();
-        expect(typeof prodLogger.info).toBe('function');
-        expect(typeof prodLogger.error).toBe('function');
-      });
-
-      it('creates independent child loggers with context', () => {
-        const prodLogger = createLogger();
-        const child = prodLogger.child({ service: 'test' });
-
-        expect(child).toBeDefined();
-        expect(child).not.toBe(prodLogger);
-        expect(typeof child.info).toBe('function');
-      });
-
-      it('defaults to debug log level', () => {
-        const prodLogger = createLogger();
-        expect(prodLogger.level).toBe('debug');
-      });
-    });
-
-    it('respects LOG_LEVEL environment variable over defaults', async () => {
-      resetConfigForTests();
-
-      vi.stubEnv('NODE_ENV', 'production');
-      vi.stubEnv('LOG_LEVEL', 'warn');
-
-      const customLogger = createLogger();
-      expect(customLogger.level).toBe('warn');
-
-      vi.unstubAllEnvs();
-      resetConfigForTests();
     });
   });
 });

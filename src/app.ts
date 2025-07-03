@@ -1,27 +1,35 @@
 import type { FastifyCorsOptions } from '@fastify/cors';
 import cors from '@fastify/cors';
-import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { fastifyRequestContext } from '@fastify/request-context';
+import type {
+  FastifyBaseLogger,
+  FastifyInstance,
+  FastifyReply,
+  FastifyRequest,
+} from 'fastify';
 import Fastify from 'fastify';
 
 import { getConfig } from './config/config.js';
 import { checkAmazonReviewsHandler, healthHandler } from './handlers/index.js';
 import { errorHandler } from './plugins/error-handler.js';
-import { logger } from './utils/logger.js';
+import { getPinoOptions } from './utils/logger.js';
 
-declare module 'fastify' {
-  interface FastifyRequest {
-    startTime: number;
+declare module '@fastify/request-context' {
+  interface RequestContextData {
+    logger: FastifyBaseLogger;
   }
 }
 
 export async function createApp() {
   const config = getConfig();
   const fastify = Fastify({
-    logger: config.NODE_ENV === 'test' ? false : logger,
+    logger: config.NODE_ENV === 'test' ? false : getPinoOptions(),
   });
 
+  await fastify.register(fastifyRequestContext);
   await fastify.register(errorHandler);
   await fastify.register(cors, getCorsOptions(fastify));
+
   await setupRequestLogging(fastify);
   registerRoutes(fastify);
 
@@ -48,35 +56,32 @@ function getCorsOptions(fastify: FastifyInstance): FastifyCorsOptions {
 }
 
 async function setupRequestLogging(fastify: FastifyInstance) {
-  fastify.addHook(
-    'onRequest',
-    async (request: FastifyRequest, _reply: FastifyReply) => {
-      request.startTime = Date.now();
+  fastify.addHook('onRequest', (request, _reply, done) => {
+    request.requestContext.set('logger', request.log);
 
-      request.log.debug(
-        {
-          method: request.method,
-          url: request.url,
-          origin: request.headers.origin,
-          headers: request.headers,
-          body: request.method === 'POST' ? request.body : undefined,
-        },
-        'Incoming request'
-      );
-    }
-  );
+    request.log.debug(
+      {
+        method: request.method,
+        url: request.url,
+        origin: request.headers.origin,
+        headers: request.headers,
+        body: request.method === 'POST' ? request.body : undefined,
+      },
+      'Incoming request'
+    );
+
+    done();
+  });
 
   fastify.addHook(
     'onResponse',
     async (request: FastifyRequest, reply: FastifyReply) => {
-      const duration = Date.now() - request.startTime;
-
       request.log.debug(
         {
           method: request.method,
           url: request.url,
           statusCode: reply.statusCode,
-          duration: `${duration}ms`,
+          duration: `${reply.elapsedTime}ms`,
           responseHeaders: reply.getHeaders(),
         },
         'Request completed'
