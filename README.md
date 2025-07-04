@@ -15,7 +15,7 @@ This API serves as the backend for the TrueStar browser extension, providing pro
 
 ### API-first development
 
-The OpenAPI specification (`openapi.yaml`) serves as the single source of truth for the API contract. TypeScript types and Zod validation schemas are automatically generated from this spec using Orval, ensuring type safety and consistency across the codebase.
+The OpenAPI specification (`openapi.yaml`) serves as the single source of truth for the API contract. The `@truestarhq/shared-types` package uses the spec file to generate TypeScript types and Zod validation schemas, ensuring type safety and consistency across all TrueStar services.
 
 ## Development
 

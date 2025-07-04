@@ -1,10 +1,10 @@
 import createError from '@fastify/error';
+import type { ErrorResponse } from '@truestarhq/shared-types';
 import type { FastifyError, FastifyInstance } from 'fastify';
 import Fastify from 'fastify';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { resetConfigForTests } from '../config/config.js';
-import type { ErrorResponse } from '../types/generated/index.js';
 import { errorHandler } from './error-handler.js';
 
 describe('errorHandler plugin', () => {

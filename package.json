@@ -16,8 +16,6 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:ci": "vitest run",
-    "codegen": "orval --config orval.config.cjs",
-    "postinstall": "yarn codegen",
     "prepare": "husky"
   },
   "dependencies": {
@@ -39,7 +37,6 @@
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "husky": "^9.1.7",
     "lint-staged": "^15.2.11",
-    "orval": "^7.10.0",
     "pino-pretty": "^13.0.0",
     "prettier": "^3.4.2",
     "tsx": "^4.19.2",

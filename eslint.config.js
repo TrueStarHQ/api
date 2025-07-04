@@ -5,7 +5,7 @@ import simpleImportSort from 'eslint-plugin-simple-import-sort';
 
 export default [
   {
-    ignores: ['dist', 'node_modules', 'src/types/generated'],
+    ignores: ['dist', 'node_modules'],
   },
   js.configs.recommended,
   {

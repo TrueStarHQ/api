@@ -1,6 +1,5 @@
+import type { HealthResponse } from '@truestarhq/shared-types';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-
-import type { HealthResponse } from '../types/generated/index.js';
 
 export async function healthHandler(
   _request: FastifyRequest,

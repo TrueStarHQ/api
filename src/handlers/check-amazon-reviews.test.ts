@@ -1,10 +1,10 @@
+import type { CheckAmazonReviewsRequest } from '@truestarhq/shared-types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   createMockReply,
   createMockRequest,
 } from '../../test/fastify-mocks.js';
-import type { CheckAmazonReviewsRequest } from '../types/generated/index.js';
 import { checkAmazonReviewsHandler } from './check-amazon-reviews.js';
 
 vi.mock('../services/review-checker/review-checker.js', () => ({

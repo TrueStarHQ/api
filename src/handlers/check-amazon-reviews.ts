@@ -1,8 +1,8 @@
+import type { CheckAmazonReviewsRequest } from '@truestarhq/shared-types';
+import { checkAmazonReviewsBody } from '@truestarhq/shared-types';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 
 import { checkReview } from '../services/review-checker/review-checker.js';
-import type { CheckAmazonReviewsRequest } from '../types/generated/index.js';
-import { checkAmazonReviewsBody } from '../types/generated/zod.js';
 
 export async function checkAmazonReviewsHandler(
   request: FastifyRequest<{ Body: CheckAmazonReviewsRequest }>,

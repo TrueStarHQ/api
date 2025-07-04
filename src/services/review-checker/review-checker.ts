@@ -1,9 +1,9 @@
+import { ReviewChecker, ReviewFlag } from '@truestarhq/shared-types';
 import OpenAI from 'openai';
 import { z } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { getConfig } from '../../config/config.js';
-import { ReviewChecker, ReviewFlag } from '../../types/generated/index.js';
 import { log } from '../../utils/logger.js';
 import { SYSTEM_REVIEW_CHECKER_PROMPT, userReviewPrompt } from './prompts.js';
 
