@@ -6,13 +6,13 @@ RUN apk add --no-cache python3 make g++
 
 WORKDIR /app
 
-COPY package.json yarn.lock .yarnrc.yml orval.config.cjs ./
+COPY package.json pnpm-lock.yaml orval.config.cjs ./
 COPY public ./public/
-COPY .yarn/releases ./.yarn/releases
-RUN yarn install --immutable
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile
 
 COPY . .
-RUN yarn build
+RUN pnpm build
 
 # ===== PRODUCTION STAGE =====
 FROM node:20-alpine
@@ -26,10 +26,10 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY .yarn/releases ./.yarn/releases
-RUN yarn install --immutable --mode skip-build && \
-    yarn cache clean
+COPY package.json pnpm-lock.yaml ./
+RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --frozen-lockfile --prod && \
+    pnpm store prune
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/public ./public

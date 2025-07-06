@@ -21,16 +21,16 @@ The OpenAPI specification (`openapi.yaml`) serves as the single source of truth 
 
 ```bash
 # Install dependencies
-yarn install
+pnpm install
 
 # Start development server
-yarn dev
+pnpm dev
 
 # Run tests
-yarn test
+pnpm test
 
 # Build for production
-yarn build
+pnpm build
 ```
 
 ## Deployment
