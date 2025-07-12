@@ -7,6 +7,12 @@ info:
     name: TrueStar Team
     email: hello@truestar.pro
 
+# TODO: As the API grows, consider splitting into multiple files, such as:
+# - /paths/*.yaml for endpoint definitions
+# - /schemas/flags/*.yaml for individual flag types
+# - /schemas/requests/*.yaml and /schemas/responses/*.yaml
+# A tool can be used to merge the files into a single file for distribution.
+
 servers:
   - url: https://api.truestar.pro
     description: Production
@@ -28,26 +34,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
 
-  /check/amazon/reviews:
+  /check/amazon/product:
     post:
-      summary: Check Amazon reviews for authenticity
-      operationId: checkAmazonReviews
+      summary: Check Amazon product reviews for authenticity
+      description: |
+        Analyzes a batch of Amazon product reviews to detect patterns of fake or manipulated reviews.
+        Returns trust score, red flags (suspicious patterns), and green flags (authenticity indicators).
+        
+        The API uses LLM analysis to identify common fake review patterns such as review bombing,
+        repeated phrases, and excessively positive language, while also recognizing authenticity
+        signals like high verified purchase rates and natural rating distributions.
+      operationId: checkAmazonProduct
       tags:
-        - Reviews
         - Amazon
+        - Products
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CheckAmazonReviewsRequest'
+              $ref: '#/components/schemas/CheckAmazonProductRequest'
       responses:
         '200':
-          description: Review check completed
+          description: Product check completed
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CheckAmazonReviewsResponse'
+                $ref: '#/components/schemas/CheckAmazonProductResponse'
         '400':
           description: Bad request
           content:
@@ -64,21 +77,18 @@ paths:
 components:
   schemas:
     HealthResponse:
-      type: object
-      required:
-        - status
-        - timestamp
-      properties:
-        status:
-          type: string
-          enum: [ok]
-          example: ok
-        timestamp:
-          type: string
-          format: date-time
-          example: '2024-12-22T10:00:00.000Z'
+      allOf:
+        - $ref: '#/components/schemas/Response'
+        - type: object
+          required:
+            - status
+          properties:
+            status:
+              type: string
+              enum: [ok]
+              example: ok
 
-    CheckAmazonReviewsRequest:
+    CheckAmazonProductRequest:
       type: object
       required:
         - reviews
@@ -86,59 +96,218 @@ components:
         reviews:
           type: array
           minItems: 1
-          description: Array of review data to analyze
+          maxItems: 100
+          description: Array of review data to analyze (max 100 for prototype)
           items:
             $ref: '#/components/schemas/AmazonReview'
 
-    CheckAmazonReviewsResponse:
+    CheckAmazonProductResponse:
+      allOf:
+        - $ref: '#/components/schemas/Response'
+        - type: object
+          required:
+            - summary
+            - metrics
+          properties:
+            summary:
+              $ref: '#/components/schemas/ProductSummary'
+            greenFlags:
+              type: array
+              items:
+                $ref: '#/components/schemas/GreenFlag'
+              description: Positive authenticity indicators
+            redFlags:
+              type: array
+              items:
+                $ref: '#/components/schemas/RedFlag'
+              description: Suspicious patterns detected
+            metrics:
+              $ref: '#/components/schemas/AnalysisMetrics'
+
+    Response:
       type: object
       required:
-        - result
         - timestamp
       properties:
-        result:
-          $ref: '#/components/schemas/ReviewChecker'
         timestamp:
           type: string
           format: date-time
+          description: Response timestamp
           example: '2024-12-22T10:00:00.000Z'
 
-    ReviewChecker:
+    ProductSummary:
       type: object
       required:
-        - isFake
-        - confidence
-        - reasons
-        - flags
-        - summary
+        - trustScore
       properties:
-        isFake:
-          type: boolean
-          description: Whether the review is likely fake
-          example: true
+        trustScore:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Overall trust score (0-100)
+          example: 72
+
+    Flag:
+      type: object
+      required:
+        - type
+        - confidence
+        - details
+      properties:
+        type:
+          type: string
+          description: Type of flag detected
         confidence:
           type: number
           format: float
           minimum: 0
           maximum: 1
-          description: Confidence level of the analysis (0-1)
-          example: 0.85
-        reasons:
-          type: array
-          items:
-            type: string
-          description: Specific reasons for the assessment
-          example: ["Excessive positivity without specific details", "Generic language patterns"]
-        flags:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReviewFlag'
-          description: Detected red flags
-          example: ["excessive_positivity", "generic_language"]
-        summary:
-          type: string
-          description: Brief explanation of the analysis
-          example: "Review appears fake due to generic praise without specific product details"
+          description: Confidence level (0-1)
+        details:
+          type: object
+          description: Flag-specific details
+
+    RedFlag:
+      oneOf:
+        - $ref: '#/components/schemas/ReviewBombingFlag'
+        - $ref: '#/components/schemas/PhraseRepetitionFlag'
+        - $ref: '#/components/schemas/ExcessivePositivityFlag'
+      discriminator:
+        propertyName: type
+        mapping:
+          review_bombing: '#/components/schemas/ReviewBombingFlag'
+          phrase_repetition: '#/components/schemas/PhraseRepetitionFlag'
+          excessive_positivity: '#/components/schemas/ExcessivePositivityFlag'
+
+    GreenFlag:
+      oneOf:
+        - $ref: '#/components/schemas/HighVerifiedPurchasesFlag'
+      discriminator:
+        propertyName: type
+        mapping:
+          high_verified_purchases: '#/components/schemas/HighVerifiedPurchasesFlag'
+
+    # Red flag schemas
+    ReviewBombingFlag:
+      allOf:
+        - $ref: '#/components/schemas/Flag'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [review_bombing]
+            details:
+              type: object
+              required:
+                - date
+                - reviewCount
+                - hoursSpan
+              properties:
+                date:
+                  type: string
+                  format: date
+                  description: Date of the review surge
+                  example: "2024-01-15"
+                reviewCount:
+                  type: integer
+                  description: Number of reviews posted
+                  example: 34
+                hoursSpan:
+                  type: number
+                  description: Time span in hours
+                  example: 3
+                reviewIds:
+                  type: array
+                  description: IDs of the suspicious reviews
+                  items:
+                    type: string
+                  example: ["amzn_123", "amzn_124", "amzn_125"]
+
+    PhraseRepetitionFlag:
+      allOf:
+        - $ref: '#/components/schemas/Flag'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [phrase_repetition]
+            details:
+              type: object
+              required:
+                - phrase
+                - reviewIds
+              properties:
+                phrase:
+                  type: string
+                  description: The repeated phrase
+                  example: "gorgeous navy blue lamp"
+                reviewIds:
+                  type: array
+                  description: Reviews containing the phrase
+                  items:
+                    type: string
+
+    ExcessivePositivityFlag:
+      allOf:
+        - $ref: '#/components/schemas/Flag'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [excessive_positivity]
+            details:
+              type: object
+              required:
+                - reviewIds
+              properties:
+                reviewIds:
+                  type: array
+                  description: Reviews with excessive positivity
+                  items:
+                    type: string
+                keywords:
+                  type: array
+                  description: Common superlative keywords found
+                  items:
+                    type: string
+                  example: ["amazing", "perfect", "best ever", "life-changing"]
+
+    # Green flag schemas
+    HighVerifiedPurchasesFlag:
+      allOf:
+        - $ref: '#/components/schemas/Flag'
+        - type: object
+          properties:
+            type:
+              type: string
+              enum: [high_verified_purchases]
+            details:
+              type: object
+              required:
+                - percentage
+              properties:
+                percentage:
+                  type: number
+                  minimum: 0
+                  maximum: 100
+                  description: Percentage of verified purchases
+                  example: 87
+
+
+    AnalysisMetrics:
+      type: object
+      required:
+        - analyzed
+        - total
+      properties:
+        analyzed:
+          type: integer
+          description: Number of reviews analyzed
+          example: 100
+        total:
+          type: integer
+          description: Total number of reviews for the product
+          example: 347
 
     AmazonReview:
       type: object
@@ -199,46 +368,31 @@ components:
           description: Badges associated with the review
           example: ["Verified Purchase", "Top Contributor"]
 
-    ReviewFlag:
-      type: string
-      enum:
-        - generic_language
-        - excessive_positivity
-        - incentivized_review
-        - competitor_mention
-        - unnatural_language
-        - repetitive_phrases
-        - suspicious_timing
-        - verified_purchase_missing
-      description: Possible red flags in reviews
-
     ErrorResponse:
-      type: object
-      required:
-        - statusCode
-        - error
-        - timestamp
-      properties:
-        statusCode:
-          type: integer
-          description: HTTP status code
-          example: 400
-        error:
-          type: string
-          description: Error message
-          example: "Invalid request"
-        details:
-          type: string
-          description: Additional error details
-          example: "Review text is required"
-        timestamp:
-          type: string
-          format: date-time
-          example: '2024-12-22T10:00:00.000Z'
+      allOf:
+        - $ref: '#/components/schemas/Response'
+        - type: object
+          required:
+            - statusCode
+            - error
+          properties:
+            statusCode:
+              type: integer
+              description: HTTP status code
+              example: 400
+            error:
+              type: string
+              description: Error message
+              example: "Invalid request"
+            details:
+              type: string
+              description: Additional error details
+              example: "Review text is required"
 
 tags:
   - name: System
     description: System health and status endpoints
-  - name: Reviews
-    description: Review checker endpoints
+  - name: Products
+    description: Product authenticity checker endpoints
   - name: Amazon
+    description: Amazon-specific endpoints

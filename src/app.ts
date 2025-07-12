@@ -12,7 +12,7 @@ import Fastify from 'fastify';
 import { join } from 'path';
 
 import { getConfig } from './config/config.js';
-import { checkAmazonReviewsHandler, healthHandler } from './handlers/index.js';
+import { checkAmazonProductHandler, healthHandler } from './handlers/index.js';
 import { errorHandler } from './plugins/error-handler.js';
 import { getPinoOptions } from './utils/logger.js';
 
@@ -99,5 +99,5 @@ async function setupRequestLogging(fastify: FastifyInstance) {
 
 function registerRoutes(fastify: FastifyInstance) {
   fastify.get('/health', healthHandler);
-  fastify.post('/check/amazon/reviews', checkAmazonReviewsHandler);
+  fastify.post('/check/amazon/product', checkAmazonProductHandler);
 }

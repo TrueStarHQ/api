@@ -6,7 +6,9 @@ import { createApp } from './app.js';
 // Mock the handlers to avoid testing their implementation
 vi.mock('./handlers/index.js', () => ({
   healthHandler: vi.fn((_req, _reply) => ({ status: 'ok' })),
-  checkAmazonReviewsHandler: vi.fn((_req, _reply) => ({ result: 'mocked' })),
+  checkAmazonProductHandler: vi.fn((_req, _reply) => ({
+    summary: { trustScore: 75 },
+  })),
 }));
 
 describe('App integration tests', () => {
@@ -39,19 +41,19 @@ describe('App integration tests', () => {
       expect(response.statusCode).toBe(404);
     });
 
-    it('should respond to POST /check/amazon/reviews', async () => {
+    it('should respond to POST /check/amazon/product', async () => {
       const response = await fastify.inject({
         method: 'POST',
-        url: '/check/amazon/reviews',
+        url: '/check/amazon/product',
       });
 
       expect(response.statusCode).not.toBe(404);
     });
 
-    it('should return 404 for GET /check/amazon/reviews', async () => {
+    it('should return 404 for GET /check/amazon/product', async () => {
       const response = await fastify.inject({
         method: 'GET',
-        url: '/check/amazon/reviews',
+        url: '/check/amazon/product',
       });
 
       expect(response.statusCode).toBe(404);

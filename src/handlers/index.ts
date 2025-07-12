@@ -1,2 +1,2 @@
-export { checkAmazonReviewsHandler } from './check-amazon-reviews.js';
-export { healthHandler } from './health.js';
+export { checkAmazonProductHandler } from './check-amazon-product/index.js';
+export { healthHandler } from './health/index.js';

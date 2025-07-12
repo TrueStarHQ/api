@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 import {
   createMockReply,
   createMockRequest,
-} from '../../test/fastify-mocks.js';
-import { healthHandler } from './health.js';
+} from '../../../test/fastify-mocks.js';
+import { healthHandler } from './index.js';
 
 describe('healthHandler', () => {
   it('returns ok status with timestamp', async () => {
