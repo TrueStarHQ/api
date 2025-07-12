@@ -11,6 +11,9 @@ importers:
       '@fastify/cors':
         specifier: ^10.0.1
         version: 10.1.0
+      '@fastify/error':
+        specifier: ^4.2.0
+        version: 4.2.0
       '@fastify/request-context':
         specifier: ^6.2.0
         version: 6.2.0
@@ -26,13 +29,19 @@ importers:
       openai:
         specifier: ^4.104.0
         version: 4.104.0(zod@3.25.76)
+      pino:
+        specifier: ^9.7.0
+        version: 9.7.0
       zod:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
+      '@eslint/js':
+        specifier: ^9.31.0
+        version: 9.31.0
       '@truestarhq/shared-types':
         specifier: truestarhq/shared-types
-        version: https://codeload.github.com/truestarhq/shared-types/tar.gz/0a48c6073d1d749d755df86cccfac0f6940fe75c
+        version: https://codeload.github.com/truestarhq/shared-types/tar.gz/cdd27a9d91aa64c58a563d3221c742b998ccbcc2
       '@types/node':
         specifier: ^22.10.2
         version: 22.16.3
@@ -588,9 +597,9 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@truestarhq/shared-types@https://codeload.github.com/truestarhq/shared-types/tar.gz/0a48c6073d1d749d755df86cccfac0f6940fe75c':
-    resolution: {tarball: https://codeload.github.com/truestarhq/shared-types/tar.gz/0a48c6073d1d749d755df86cccfac0f6940fe75c}
-    version: 0.0.1
+  '@truestarhq/shared-types@https://codeload.github.com/truestarhq/shared-types/tar.gz/cdd27a9d91aa64c58a563d3221c742b998ccbcc2':
+    resolution: {tarball: https://codeload.github.com/truestarhq/shared-types/tar.gz/cdd27a9d91aa64c58a563d3221c742b998ccbcc2}
+    version: 0.0.2
 
   '@types/estree@1.0.8':
     resolution: {integrity: sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==}
@@ -2187,7 +2196,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.45.0':
     optional: true
 
-  '@truestarhq/shared-types@https://codeload.github.com/truestarhq/shared-types/tar.gz/0a48c6073d1d749d755df86cccfac0f6940fe75c':
+  '@truestarhq/shared-types@https://codeload.github.com/truestarhq/shared-types/tar.gz/cdd27a9d91aa64c58a563d3221c742b998ccbcc2':
     dependencies:
       zod: 3.25.76
 
