@@ -28,7 +28,7 @@ WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
 RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN pnpm install --frozen-lockfile --prod && \
+RUN pnpm install --frozen-lockfile --prod --ignore-scripts && \
     pnpm store prune
 
 COPY --from=builder /app/dist ./dist

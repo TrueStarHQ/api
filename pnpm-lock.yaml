@@ -20,6 +20,9 @@ importers:
       '@fastify/static':
         specifier: ^8.2.0
         version: 8.2.0
+      '@truestarhq/shared-types':
+        specifier: github:truestarhq/shared-types
+        version: https://codeload.github.com/truestarhq/shared-types/tar.gz/968621f4814ce24d9948ffe397e4b0b04f3a8df9
       dotenv:
         specifier: ^16.5.0
         version: 16.6.1
@@ -39,9 +42,6 @@ importers:
       '@eslint/js':
         specifier: ^9.31.0
         version: 9.31.0
-      '@truestarhq/shared-types':
-        specifier: truestarhq/shared-types
-        version: https://codeload.github.com/truestarhq/shared-types/tar.gz/cdd27a9d91aa64c58a563d3221c742b998ccbcc2
       '@types/node':
         specifier: ^22.10.2
         version: 22.16.3
@@ -597,8 +597,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@truestarhq/shared-types@https://codeload.github.com/truestarhq/shared-types/tar.gz/cdd27a9d91aa64c58a563d3221c742b998ccbcc2':
-    resolution: {tarball: https://codeload.github.com/truestarhq/shared-types/tar.gz/cdd27a9d91aa64c58a563d3221c742b998ccbcc2}
+  '@truestarhq/shared-types@https://codeload.github.com/truestarhq/shared-types/tar.gz/968621f4814ce24d9948ffe397e4b0b04f3a8df9':
+    resolution: {tarball: https://codeload.github.com/truestarhq/shared-types/tar.gz/968621f4814ce24d9948ffe397e4b0b04f3a8df9}
     version: 0.0.2
 
   '@types/estree@1.0.8':
@@ -2196,7 +2196,7 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.45.0':
     optional: true
 
-  '@truestarhq/shared-types@https://codeload.github.com/truestarhq/shared-types/tar.gz/cdd27a9d91aa64c58a563d3221c742b998ccbcc2':
+  '@truestarhq/shared-types@https://codeload.github.com/truestarhq/shared-types/tar.gz/968621f4814ce24d9948ffe397e4b0b04f3a8df9':
     dependencies:
       zod: 3.25.76
 
